@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Commercial - Poêles & Granulés</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #4a5568;
+        }
+
+        .tab.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-value {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .positive { color: #38a169; }
+        .negative { color: #e53e3e; }
+        .neutral { color: #3182ce; }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            transition: width 0.3s ease;
+        }
+
+        .vendeur-card {
+            border-left: 4px solid #667eea;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-field label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .input-field input {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-field input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .chart-container {
+            height: 300px;
+            display: flex;
+            align-items: end;
+            justify-content: space-around;
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .bar {
+            background: linear-gradient(to top, #667eea, #764ba2);
+            border-radius: 4px 4px 0 0;
+            min-height: 20px;
+            width: 40px;
+            position: relative;
+            transition: height 0.5s ease;
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .alert-success {
+            background: rgba(72, 187, 120, 0.1);
+            border: 1px solid #48bb78;
+            color: #2f855a;
+        }
+
+        .alert-warning {
+            background: rgba(237, 137, 54, 0.1);
+            border: 1px solid #ed8936;
+            color: #c05621;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Dashboard Commercial - Poêles & Granulés</h1>
+            <p>Suivi des performances de votre équipe de vente</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('vue-ensemble')">Vue d'ensemble</button>
+            <button class="tab" onclick="showTab('vendeurs')">Vendeurs</button>
+            <button class="tab" onclick="showTab('tunnel')">Tunnel conversion</button>
+            <button class="tab" onclick="showTab('saisie')">Saisie données</button>
+        </div>
+
+        <!-- Vue d'ensemble -->
+        <div id="vue-ensemble" class="tab-content active">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>📊 Performances du mois</h3>
+                    <div class="metric">
+                        <span>Prospects générés</span>
+                        <span class="metric-value neutral" id="total-prospects">0</span>
+                    </div>
+                    <div class="metric">
+                        <span>Devis envoyés</span>
+                        <span class="metric-value neutral" id="total-devis">0</span>
+                    </div>
+                    <div class="metric">
+                        <span>Ventes réalisées</span>
+                        <span class="metric-value positive" id="total-ventes">0</span>
+                    </div>
+                    <div class="metric">
+                        <span>Taux transformation global</span>
+                        <span class="metric-value" id="taux-global">0%</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>💰 Chiffre d'affaires</h3>
+                    <div class="metric">
+                        <span>CA réalisé</span>
+                        <span class="metric-value positive" id="ca-realise">0 €</span>
+                    </div>
+                    <div class="metric">
+                        <span>Objectif mensuel</span>
+                        <span class="metric-value neutral" id="objectif-ca">50 000 €</span>
+                    </div>
+                    <div class="metric">
+                        <span>Écart objectif</span>
+                        <span class="metric-value" id="ecart-ca">-50 000 €</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-ca" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🏆 Top performer</h3>
+                    <div class="metric">
+                        <span>Meilleur vendeur</span>
+                        <span class="metric-value positive" id="top-vendeur">-</span>
+                    </div>
+                    <div class="metric">
+                        <span>Taux de transformation</span>
+                        <span class="metric-value positive" id="top-taux">0%</span>
+                    </div>
+                    <div class="metric">
+                        <span>CA généré</span>
+                        <span class="metric-value positive" id="top-ca">0 €</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🎯 Objectifs vs Réalisé</h3>
+                    <div class="chart-container" id="chart-objectifs">
+                        <!-- Chart will be generated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendeurs -->
+        <div id="vendeurs" class="tab-content">
+            <div class="dashboard-grid" id="vendeurs-grid">
+                <!-- Vendeurs cards will be generated by JS -->
+            </div>
+        </div>
+
+        <!-- Tunnel conversion -->
+        <div id="tunnel" class="tab-content">
+            <div class="card">
+                <h3>🔄 Analyse du tunnel de conversion</h3>
+                <div class="chart-container" id="tunnel-chart">
+                    <!-- Tunnel chart will be generated by JS -->
+                </div>
+                <div class="alert alert-warning" id="tunnel-alert" style="display: none;">
+                    <strong>⚠️ Point d'attention :</strong> <span id="tunnel-message"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Saisie données -->
+        <div id="saisie" class="tab-content">
+            <div class="card">
+                <h3>📝 Saisie des données commerciales</h3>
+                
+                <div class="input-group">
+                    <div class="input-field">
+                        <label>Vendeur</label>
+                        <select id="vendeur-select" style="padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                            <option value="Jean">Jean</option>
+                            <option value="Marie">Marie</option>
+                            <option value="Pierre">Pierre</option>
+                            <option value="Sophie">Sophie</option>
+                            <option value="Lucas">Lucas</option>
+                            <option value="Emma">Emma</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-field">
+                        <label>Prospects reçus</label>
+                        <input type="number" id="prospects-input" placeholder="Nombre de prospects" min="0">
+                    </div>
+                    
+                    <div class="input-field">
+                        <label>Devis envoyés</label>
+                        <input type="number" id="devis-input" placeholder="Nombre de devis" min="0">
+                    </div>
+                    
+                    <div class="input-field">
+                        <label>Ventes finalisées</label>
+                        <input type="number" id="ventes-input" placeholder="Nombre de ventes" min="0">
+                    </div>
+                    
+                    <div class="input-field">
+                        <label>CA généré (€)</label>
+                        <input type="number" id="ca-input" placeholder="Chiffre d'affaires" min="0">
+                    </div>
+                    
+                    <div class="input-field">
+                        <label>Type majoritaire</label>
+                        <select id="type-poele" style="padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                            <option value="Bois">Poêle à bois</option>
+                            <option value="Granulés">Poêle à granulés</option>
+                            <option value="Mixte">Mixte bois/granulés</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="ajouterDonnees()">💾 Enregistrer les données</button>
+                
+                <div id="success-message" class="alert alert-success" style="display: none;">
+                    ✅ Données enregistrées avec succès !
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Données simulées - En production, ces données viendraient d'une base de données
+        let vendeursData = {
+            'Jean': { prospects: 15, devis: 8, ventes: 3, ca: 12000, type: 'Bois' },
+            'Marie': { prospects: 12, devis: 9, ventes: 5, ca: 18000, type: 'Granulés' },
+            'Pierre': { prospects: 18, devis: 6, ventes: 2, ca: 8000, type: 'Bois' },
+            'Sophie': { prospects: 20, devis: 12, ventes: 6, ca: 22000, type: 'Granulés' },
+            'Lucas': { prospects: 10, devis: 7, ventes: 4, ca: 15000, type: 'Mixte' },
+            'Emma': { prospects: 14, devis: 10, ventes: 7, ca: 25000, type: 'Granulés' }
+        };
+
+        function showTab(tabName) {
+            // Cacher tous les contenus
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Désactiver tous les tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Activer le tab et contenu sélectionnés
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Mettre à jour les données selon le tab
+            if (tabName === 'vue-ensemble') {
+                updateVueEnsemble();
+            } else if (tabName === 'vendeurs') {
+                updateVendeurs();
+            } else if (tabName === 'tunnel') {
+                updateTunnel();
+            }
+        }
+
+        function updateVueEnsemble() {
+            let totalProspects = 0, totalDevis = 0, totalVentes = 0, totalCA = 0;
+            let bestVendeur = '', bestTaux = 0, bestCA = 0;
+
+            for (let vendeur in vendeursData) {
+                const data = vendeursData[vendeur];
+                totalProspects += data.prospects;
+                totalDevis += data.devis;
+                totalVentes += data.ventes;
+                totalCA += data.ca;
+
+                const taux = data.prospects > 0 ? (data.ventes / data.prospects * 100) : 0;
+                if (taux > bestTaux) {
+                    bestTaux = taux;
+                    bestVendeur = vendeur;
+                    bestCA = data.ca;
+                }
+            }
+
+            const tauxGlobal = totalProspects > 0 ? (totalVentes / totalProspects * 100) : 0;
+            const objectifCA = 50000;
+            const ecartCA = totalCA - objectifCA;
+            const progressCA = Math.min(100, (totalCA / objectifCA) * 100);
+
+            document.getElementById('total-prospects').textContent = totalProspects;
+            document.getElementById('total-devis').textContent = totalDevis;
+            document.getElementById('total-ventes').textContent = totalVentes;
+            document.getElementById('taux-global').textContent = tauxGlobal.toFixed(1) + '%';
+            document.getElementById('taux-global').className = 'metric-value ' + (tauxGlobal >= 20 ? 'positive' : tauxGlobal >= 15 ? 'neutral' : 'negative');
+
+            document.getElementById('ca-realise').textContent = totalCA.toLocaleString() + ' €';
+            document.getElementById('ecart-ca').textContent = (ecartCA >= 0 ? '+' : '') + ecartCA.toLocaleString() + ' €';
+            document.getElementById('ecart-ca').className = 'metric-value ' + (ecartCA >= 0 ? 'positive' : 'negative');
+            document.getElementById('progress-ca').style.width = progressCA + '%';
+
+            document.getElementById('top-vendeur').textContent = bestVendeur;
+            document.getElementById('top-taux').textContent = bestTaux.toFixed(1) + '%';
+            document.getElementById('top-ca').textContent = bestCA.toLocaleString() + ' €';
+
+            // Mise à jour du graphique objectifs
+            updateChart();
+        }
+
+        function updateVendeurs() {
+            const grid = document.getElementById('vendeurs-grid');
+            grid.innerHTML = '';
+
+            for (let vendeur in vendeursData) {
+                const data = vendeursData[vendeur];
+                const taux = data.prospects > 0 ? (data.ventes / data.prospects * 100) : 0;
+                const tauxDevis = data.devis > 0 ? (data.ventes / data.devis * 100) : 0;
+
+                const card = document.createElement('div');
+                card.className = 'card vendeur-card';
+                card.innerHTML = `
+                    <h3>👤 ${vendeur}</h3>
+                    <div class="metric">
+                        <span>Prospects traités</span>
+                        <span class="metric-value neutral">${data.prospects}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Devis envoyés</span>
+                        <span class="metric-value neutral">${data.devis}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Ventes réalisées</span>
+                        <span class="metric-value positive">${data.ventes}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Taux transformation</span>
+                        <span class="metric-value ${taux >= 25 ? 'positive' : taux >= 20 ? 'neutral' : 'negative'}">${taux.toFixed(1)}%</span>
+                    </div>
+                    <div class="metric">
+                        <span>Taux devis → vente</span>
+                        <span class="metric-value ${tauxDevis >= 60 ? 'positive' : tauxDevis >= 45 ? 'neutral' : 'negative'}">${tauxDevis.toFixed(1)}%</span>
+                    </div>
+                    <div class="metric">
+                        <span>CA généré</span>
+                        <span class="metric-value positive">${data.ca.toLocaleString()} €</span>
+                    </div>
+                    <div class="metric">
+                        <span>Type principal</span>
+                        <span class="metric-value neutral">${data.type}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        function updateTunnel() {
+            let totalProspects = 0, totalDevis = 0, totalVentes = 0;
+            
+            for (let vendeur in vendeursData) {
+                const data = vendeursData[vendeur];
+                totalProspects += data.prospects;
+                totalDevis += data.devis;
+                totalVentes += data.ventes;
+            }
+
+            const tauxProspectDevis = totalProspects > 0 ? (totalDevis / totalProspects * 100) : 0;
+            const tauxDevisVente = totalDevis > 0 ? (totalVentes / totalDevis * 100) : 0;
+            const tauxGlobal = totalProspects > 0 ? (totalVentes / totalProspects * 100) : 0;
+
+            const chart = document.getElementById('tunnel-chart');
+            chart.innerHTML = `
+                <div style="display: flex; align-items: end; height: 100%; width: 100%; justify-content: space-around;">
+                    <div style="text-align: center;">
+                        <div class="bar" style="height: ${Math.max(20, totalProspects * 3)}px; background: linear-gradient(to top, #4299e1, #3182ce);"></div>
+                        <div style="margin-top: 10px; font-weight: bold; color: #2d3748;">Prospects</div>
+                        <div style="font-size: 1.2em; color: #3182ce;">${totalProspects}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; padding: 0 20px;">
+                        <div style="color: #4a5568; font-weight: bold;">${tauxProspectDevis.toFixed(1)}%</div>
+                        <div style="width: 50px; height: 2px; background: #cbd5e0; margin: 0 10px;"></div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="bar" style="height: ${Math.max(20, totalDevis * 5)}px; background: linear-gradient(to top, #ed8936, #dd6b20);"></div>
+                        <div style="margin-top: 10px; font-weight: bold; color: #2d3748;">Devis</div>
+                        <div style="font-size: 1.2em; color: #dd6b20;">${totalDevis}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; padding: 0 20px;">
+                        <div style="color: #4a5568; font-weight: bold;">${tauxDevisVente.toFixed(1)}%</div>
+                        <div style="width: 50px; height: 2px; background: #cbd5e0; margin: 0 10px;"></div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="bar" style="height: ${Math.max(20, totalVentes * 8)}px; background: linear-gradient(to top, #48bb78, #38a169);"></div>
+                        <div style="margin-top: 10px; font-weight: bold; color: #2d3748;">Ventes</div>
+                        <div style="font-size: 1.2em; color: #38a169;">${totalVentes}</div>
+                    </div>
+                </div>
+            `;
+
+            // Analyse et alerte
+            const alert = document.getElementById('tunnel-alert');
+            const message = document.getElementById('tunnel-message');
+            
+            if (tauxProspectDevis < 50) {
+                alert.style.display = 'block';
+                message.textContent = `Taux prospect→devis faible (${tauxProspectDevis.toFixed(1)}%). Focus sur la qualité de la découverte client.`;
+            } else if (tauxDevisVente < 45) {
+                alert.style.display = 'block';
+                message.textContent = `Taux devis→vente faible (${tauxDevisVente.toFixed(1)}%). Focus sur la conclusion et le suivi commercial.`;
+            } else {
+                alert.style.display = 'none';
+            }
+        }
+
+        function updateChart() {
+            const chart = document.getElementById('chart-objectifs');
+            const vendeurs = Object.keys(vendeursData);
+            const objectifParVendeur = 8333; // 50000/6 vendeurs
+
+            let chartHTML = '';
+            vendeurs.forEach(vendeur => {
+                const ca = vendeursData[vendeur].ca;
+                const height = Math.max(20, (ca / objectifParVendeur) * 200);
+                const color = ca >= objectifParVendeur ? '#48bb78' : ca >= objectifParVendeur * 0.8 ? '#ed8936' : '#e53e3e';
+                
+                chartHTML += `
+                    <div style="text-align: center;">
+                        <div class="bar" style="height: ${height}px; background: ${color};">
+                            <div class="bar-value">${(ca/1000).toFixed(0)}k€</div>
+                        </div>
+                        <div class="bar-label">${vendeur}</div>
+                    </div>
+                `;
+            });
+            chart.innerHTML = chartHTML;
+        }
+
+        function ajouterDonnees() {
+            const vendeur = document.getElementById('vendeur-select').value;
+            const prospects = parseInt(document.getElementById('prospects-input').value) || 0;
+            const devis = parseInt(document.getElementById('devis-input').value) || 0;
+            const ventes = parseInt(document.getElementById('ventes-input').value) || 0;
+            const ca = parseInt(document.getElementById('ca-input').value) || 0;
+            const type = document.getElementById('type-poele').value;
+
+            // Mise à jour des données (additive)
+            vendeursData[vendeur].prospects += prospects;
+            vendeursData[vendeur].devis += devis;
+            vendeursData[vendeur].ventes += ventes;
+            vendeursData[vendeur].ca += ca;
+            if (type !== vendeursData[vendeur].type) {
+                vendeursData[vendeur].type = type;
+            }
+
+            // Réinitialiser les champs
+            document.getElementById('prospects-input').value = '';
+            document.getElementById('devis-input').value = '';
+            document.getElementById('ventes-input').value = '';
+            document.getElementById('ca-input').value = '';
+
+            // Afficher message de succès
+            const successMsg = document.getElementById('success-message');
+            successMsg.style.display = 'block';
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 3000);
+
+            // Mettre à jour tous les affichages
+            updateVueEnsemble();
+        }
+
+        // Initialisation au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            updateVueEnsemble();
+            updateVendeurs();
+            updateTunnel();
+        });
+    </script>
+</body>
+</html>
