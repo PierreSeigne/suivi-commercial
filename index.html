@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Commercial - Centre Val de Loire</title>
+    <title>Dashboard Commercial - Poêles & Granulés</title>
     <style>
         * {
             margin: 0;
@@ -557,6 +557,11 @@
                     </div>
                     
                     <div class="input-field">
+                        <label>Marge moyenne par vente (€)</label>
+                        <input type="number" id="marge-input" placeholder="Ex: 2200" min="0">
+                    </div>
+                    
+                    <div class="input-field">
                         <label>Type majoritaire</label>
                         <select id="type-poele">
                             <option value="Bois">Poêle à bois</option>
@@ -649,7 +654,7 @@
     </div>
 
     <script>
-        // Données des vendeurs avec vrais noms
+        // Données des vendeurs avec vrais noms et marges
         let vendeursData = {
             'Vincent': { prospects: 15, devis: 8, ventes: 3, ca: 32000, type: 'Bois', objectif: 80000, marge: 1800 },
             'Raphael': { prospects: 12, devis: 9, ventes: 5, ca: 78000, type: 'Granulés', objectif: 100000, marge: 2100 },
@@ -657,9 +662,6 @@
             'Pablo': { prospects: 20, devis: 12, ventes: 6, ca: 82000, type: 'Granulés', objectif: 90000, marge: 2250 },
             'Nathan': { prospects: 10, devis: 7, ventes: 4, ca: 65000, type: 'Mixte', objectif: 85000, marge: 2050 }
         };
-
-        // Marge minimum requise
-        const MARGE_MINIMUM = 2000;
 
         // Configuration des paliers de primes (global pour tous les vendeurs pour l'exemple)
         let paliersGlobaux = [
@@ -669,6 +671,9 @@
             { seuil: 100000, prime: 500 },
             { seuil: 110000, prime: 750 }
         ];
+
+        // Marge minimum requise
+        const MARGE_MINIMUM = 2000;
 
         function showTab(tabName) {
             // Cacher tous les contenus
@@ -774,6 +779,36 @@
             updateChart();
         }
 
+        function updateAlertesMarges(vendeursEnAlerte) {
+            const container = document.getElementById('alertes-marges');
+            
+            if (vendeursEnAlerte.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>✅ Excellent !</strong> Tous les vendeurs respectent la marge minimum de ${MARGE_MINIMUM.toLocaleString()}€
+                    </div>
+                `;
+            } else {
+                let alertesHTML = `
+                    <div class="alert alert-warning">
+                        <strong>⚠️ ${vendeursEnAlerte.length} vendeur(s) en dessous de la marge minimum :</strong>
+                    </div>
+                `;
+                
+                vendeursEnAlerte.forEach(vendeur => {
+                    alertesHTML += `
+                        <div class="alert alert-warning" style="margin: 5px 0; padding: 10px;">
+                            <strong>${vendeur.nom}</strong> : ${vendeur.marge.toLocaleString()}€ 
+                            (${vendeur.ecart.toLocaleString()}€ sous le minimum)
+                            <br><small>💡 Action requise : revoir stratégie tarifaire ou négociation</small>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = alertesHTML;
+            }
+        }
+
         function updateVendeurs() {
             const grid = document.getElementById('vendeurs-grid');
             grid.innerHTML = '';
@@ -829,14 +864,14 @@
                         <span class="metric-value positive">${primes.toLocaleString()} €</span>
                     </div>
                     <div class="metric">
+                        <span>Marge moyenne par vente</span>
+                        <span class="metric-value ${data.marge >= MARGE_MINIMUM ? 'positive' : 'negative'}">${data.marge.toLocaleString()} €</span>
+                    </div>
+                    <div class="metric">
                         <span>Type principal</span>
                         <span class="metric-value neutral">${data.type}</span>
                     </div>
-                    <div class="metric">
-                        <span>Marge moyenne</span>
-                        <span class="metric-value ${data.marge >= MARGE_MINIMUM ? 'positive' : 'negative'}">${data.marge.toLocaleString()} €</span>
-                    </div>
-                    ${data.marge < MARGE_MINIMUM ? `<div class="alert alert-warning" style="margin-top: 10px;"><strong>⚠️ Marge insuffisante :</strong> ${MARGE_MINIMUM - data.marge}€ en dessous du minimum requis (${MARGE_MINIMUM}€)</div>` : ''}
+                    ${data.marge < MARGE_MINIMUM ? `<div class="alert alert-warning" style="margin-top: 10px;"><strong>⚠️ Marge insuffisante :</strong> ${MARGE_MINIMUM - data.marge}€ en dessous du minimum requis (${MARGE_MINIMUM.toLocaleString()}€)</div>` : ''}
                 `;
                 grid.appendChild(card);
             }
@@ -951,36 +986,6 @@
             } else {
                 document.getElementById('raison-coaching').textContent = 'Optimisation performance';
                 document.getElementById('action-coaching').textContent = 'Partage bonnes pratiques équipe';
-            }
-        }
-
-        function updateAlertesMarges(vendeursEnAlerte) {
-            const container = document.getElementById('alertes-marges');
-            
-            if (vendeursEnAlerte.length === 0) {
-                container.innerHTML = `
-                    <div class="alert alert-success">
-                        <strong>✅ Excellent !</strong> Tous les vendeurs respectent la marge minimum de ${MARGE_MINIMUM.toLocaleString()}€
-                    </div>
-                `;
-            } else {
-                let alertesHTML = `
-                    <div class="alert alert-warning">
-                        <strong>⚠️ ${vendeursEnAlerte.length} vendeur(s) en dessous de la marge minimum :</strong>
-                    </div>
-                `;
-                
-                vendeursEnAlerte.forEach(vendeur => {
-                    alertesHTML += `
-                        <div class="alert alert-warning" style="margin: 5px 0; padding: 10px;">
-                            <strong>${vendeur.nom}</strong> : ${vendeur.marge.toLocaleString()}€ 
-                            (${vendeur.ecart.toLocaleString()}€ sous le minimum)
-                            <br><small>💡 Action requise : revoir stratégie tarifaire ou négociation</small>
-                        </div>
-                    `;
-                });
-                
-                container.innerHTML = alertesHTML;
             }
         }
 
