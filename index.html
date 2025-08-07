@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
         }
 
@@ -49,11 +49,13 @@
             padding: 5px;
             margin-bottom: 20px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
         }
 
         .tab {
             flex: 1;
-            padding: 12px 20px;
+            min-width: 120px;
+            padding: 12px 15px;
             border: none;
             background: transparent;
             border-radius: 8px;
@@ -61,6 +63,7 @@
             font-weight: 600;
             transition: all 0.3s ease;
             color: #4a5568;
+            text-align: center;
         }
 
         .tab.active {
@@ -99,6 +102,7 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
         }
 
         .card:hover {
@@ -170,7 +174,7 @@
             color: #4a5568;
         }
 
-        .input-field input {
+        .input-field input, .input-field select {
             padding: 10px;
             border: 2px solid #e2e8f0;
             border-radius: 8px;
@@ -178,7 +182,7 @@
             transition: border-color 0.3s ease;
         }
 
-        .input-field input:focus {
+        .input-field input:focus, .input-field select:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -193,11 +197,16 @@
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
+            margin: 5px;
         }
 
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #e53e3e, #c53030);
         }
 
         .chart-container {
@@ -209,6 +218,15 @@
             border-radius: 10px;
             padding: 20px;
             margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+            margin: 0 5px;
         }
 
         .bar {
@@ -221,13 +239,13 @@
         }
 
         .bar-label {
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
+            margin-top: 10px;
             font-size: 0.8em;
             font-weight: 600;
             color: #4a5568;
+            text-align: center;
+            max-width: 60px;
+            word-wrap: break-word;
         }
 
         .bar-value {
@@ -235,9 +253,10 @@
             top: -25px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.9em;
+            font-size: 0.8em;
             font-weight: bold;
             color: #2d3748;
+            white-space: nowrap;
         }
 
         .alert {
@@ -259,6 +278,58 @@
             color: #c05621;
         }
 
+        .alert-info {
+            background: rgba(66, 153, 225, 0.1);
+            border: 1px solid #4299e1;
+            color: #2b6cb0;
+        }
+
+        .paliers-container {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .palier-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .palier-item:last-child {
+            border-bottom: none;
+        }
+
+        .prime-badge {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .prediction-card {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+        }
+
+        .prediction-card h3 {
+            color: white;
+        }
+
+        .ai-indicator {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 8px;
+        }
+
         @media (max-width: 768px) {
             .dashboard-grid {
                 grid-template-columns: 1fr;
@@ -270,6 +341,10 @@
             
             .header h1 {
                 font-size: 2em;
+            }
+
+            .chart-container {
+                height: 250px;
             }
         }
     </style>
@@ -284,8 +359,11 @@
         <div class="tabs">
             <button class="tab active" onclick="showTab('vue-ensemble')">Vue d'ensemble</button>
             <button class="tab" onclick="showTab('vendeurs')">Vendeurs</button>
+            <button class="tab" onclick="showTab('objectifs')">Objectifs & Primes</button>
+            <button class="tab" onclick="showTab('predictions')">Prédictions IA</button>
             <button class="tab" onclick="showTab('tunnel')">Tunnel conversion</button>
             <button class="tab" onclick="showTab('saisie')">Saisie données</button>
+            <button class="tab" onclick="showTab('admin')">Administration</button>
         </div>
 
         <!-- Vue d'ensemble -->
@@ -318,12 +396,12 @@
                         <span class="metric-value positive" id="ca-realise">0 €</span>
                     </div>
                     <div class="metric">
-                        <span>Objectif mensuel</span>
-                        <span class="metric-value neutral" id="objectif-ca">50 000 €</span>
+                        <span>Objectif mensuel équipe</span>
+                        <span class="metric-value neutral" id="objectif-ca-total">0 €</span>
                     </div>
                     <div class="metric">
                         <span>Écart objectif</span>
-                        <span class="metric-value" id="ecart-ca">-50 000 €</span>
+                        <span class="metric-value" id="ecart-ca">0 €</span>
                     </div>
                     <div class="progress-bar">
                         <div class="progress-fill" id="progress-ca" style="width: 0%"></div>
@@ -344,10 +422,14 @@
                         <span>CA généré</span>
                         <span class="metric-value positive" id="top-ca">0 €</span>
                     </div>
+                    <div class="metric">
+                        <span>Primes gagnées</span>
+                        <span class="metric-value positive" id="top-primes">0 €</span>
+                    </div>
                 </div>
 
                 <div class="card">
-                    <h3>🎯 Objectifs vs Réalisé</h3>
+                    <h3>🎯 Performance vs Objectifs</h3>
                     <div class="chart-container" id="chart-objectifs">
                         <!-- Chart will be generated by JS -->
                     </div>
@@ -359,6 +441,57 @@
         <div id="vendeurs" class="tab-content">
             <div class="dashboard-grid" id="vendeurs-grid">
                 <!-- Vendeurs cards will be generated by JS -->
+            </div>
+        </div>
+
+        <!-- Objectifs & Primes -->
+        <div id="objectifs" class="tab-content">
+            <div class="dashboard-grid" id="objectifs-grid">
+                <!-- Objectifs cards will be generated by JS -->
+            </div>
+        </div>
+
+        <!-- Prédictions IA -->
+        <div id="predictions" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card prediction-card">
+                    <h3>🤖 Prédictions IA <span class="ai-indicator">IA</span></h3>
+                    <div class="metric">
+                        <span>CA prévu fin de mois</span>
+                        <span class="metric-value" id="prediction-ca" style="color: white;">0 €</span>
+                    </div>
+                    <div class="metric">
+                        <span>Probabilité atteinte objectif</span>
+                        <span class="metric-value" id="prediction-probabilite" style="color: white;">0%</span>
+                    </div>
+                    <div class="metric">
+                        <span>Tendance générale</span>
+                        <span class="metric-value" id="prediction-tendance" style="color: white;">-</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📈 Recommandations IA</h3>
+                    <div id="recommendations-ia">
+                        <!-- Recommendations will be generated by JS -->
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🎯 Vendeur à coacher prioritairement</h3>
+                    <div class="metric">
+                        <span>Vendeur identifié</span>
+                        <span class="metric-value negative" id="vendeur-coaching">-</span>
+                    </div>
+                    <div class="metric">
+                        <span>Raison principale</span>
+                        <span class="metric-value neutral" id="raison-coaching">-</span>
+                    </div>
+                    <div class="metric">
+                        <span>Action suggérée</span>
+                        <span class="metric-value neutral" id="action-coaching">-</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -383,13 +516,12 @@
                 <div class="input-group">
                     <div class="input-field">
                         <label>Vendeur</label>
-                        <select id="vendeur-select" style="padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
-                            <option value="Jean">Jean</option>
-                            <option value="Marie">Marie</option>
-                            <option value="Pierre">Pierre</option>
-                            <option value="Sophie">Sophie</option>
-                            <option value="Lucas">Lucas</option>
-                            <option value="Emma">Emma</option>
+                        <select id="vendeur-select">
+                            <option value="Vincent">Vincent</option>
+                            <option value="Raphael">Raphael</option>
+                            <option value="Léo">Léo</option>
+                            <option value="Pablo">Pablo</option>
+                            <option value="Nathan">Nathan</option>
                         </select>
                     </div>
                     
@@ -415,7 +547,7 @@
                     
                     <div class="input-field">
                         <label>Type majoritaire</label>
-                        <select id="type-poele" style="padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                        <select id="type-poele">
                             <option value="Bois">Poêle à bois</option>
                             <option value="Granulés">Poêle à granulés</option>
                             <option value="Mixte">Mixte bois/granulés</option>
@@ -430,18 +562,99 @@
                 </div>
             </div>
         </div>
+
+        <!-- Administration -->
+        <div id="admin" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>⚙️ Configuration des objectifs mensuels</h3>
+                    
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label>Vendeur</label>
+                            <select id="admin-vendeur-select">
+                                <option value="Vincent">Vincent</option>
+                                <option value="Raphael">Raphael</option>
+                                <option value="Léo">Léo</option>
+                                <option value="Pablo">Pablo</option>
+                                <option value="Nathan">Nathan</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-field">
+                            <label>Mois</label>
+                            <select id="admin-mois-select">
+                                <option value="Septembre 2025">Septembre 2025</option>
+                                <option value="Octobre 2025">Octobre 2025</option>
+                                <option value="Novembre 2025">Novembre 2025</option>
+                                <option value="Décembre 2025">Décembre 2025</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-field">
+                            <label>Objectif CA (€)</label>
+                            <input type="number" id="admin-objectif-input" placeholder="Ex: 100000" min="0">
+                        </div>
+                    </div>
+                    
+                    <button class="btn" onclick="definirObjectif()">🎯 Définir l'objectif</button>
+                </div>
+
+                <div class="card">
+                    <h3>💰 Configuration des paliers de primes</h3>
+                    
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label>Seuil CA (€)</label>
+                            <input type="number" id="admin-seuil-input" placeholder="Ex: 110000" min="0">
+                        </div>
+                        
+                        <div class="input-field">
+                            <label>Prime (€)</label>
+                            <input type="number" id="admin-prime-input" placeholder="Ex: 500" min="0">
+                        </div>
+                    </div>
+                    
+                    <button class="btn" onclick="ajouterPalier()">💎 Ajouter un palier</button>
+                    <button class="btn btn-danger" onclick="reinitialiserPaliers()">🗑️ Réinitialiser</button>
+                    
+                    <div id="paliers-preview" class="paliers-container" style="display: none;">
+                        <h4>Paliers actuels :</h4>
+                        <div id="paliers-list"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📊 Actions globales</h3>
+                    <button class="btn" onclick="exporterDonnees()">📥 Exporter les données</button>
+                    <button class="btn btn-danger" onclick="reinitialiserDonnees()">🔄 Réinitialiser toutes les données</button>
+                    
+                    <div class="alert alert-info">
+                        <strong>ℹ️ Info :</strong> Les données sont stockées localement dans votre navigateur. Pour sauvegarder définitivement, utilisez l'export.
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Données simulées - En production, ces données viendraient d'une base de données
+        // Données des vendeurs avec vrais noms
         let vendeursData = {
-            'Jean': { prospects: 15, devis: 8, ventes: 3, ca: 12000, type: 'Bois' },
-            'Marie': { prospects: 12, devis: 9, ventes: 5, ca: 18000, type: 'Granulés' },
-            'Pierre': { prospects: 18, devis: 6, ventes: 2, ca: 8000, type: 'Bois' },
-            'Sophie': { prospects: 20, devis: 12, ventes: 6, ca: 22000, type: 'Granulés' },
-            'Lucas': { prospects: 10, devis: 7, ventes: 4, ca: 15000, type: 'Mixte' },
-            'Emma': { prospects: 14, devis: 10, ventes: 7, ca: 25000, type: 'Granulés' }
+            'Vincent': { prospects: 15, devis: 8, ventes: 3, ca: 32000, type: 'Bois', objectif: 80000 },
+            'Raphael': { prospects: 12, devis: 9, ventes: 5, ca: 78000, type: 'Granulés', objectif: 100000 },
+            'Léo': { prospects: 18, devis: 6, ventes: 2, ca: 28000, type: 'Bois', objectif: 75000 },
+            'Pablo': { prospects: 20, devis: 12, ventes: 6, ca: 82000, type: 'Granulés', objectif: 90000 },
+            'Nathan': { prospects: 10, devis: 7, ventes: 4, ca: 65000, type: 'Mixte', objectif: 85000 }
         };
+
+        // Configuration des paliers de primes (global pour tous les vendeurs pour l'exemple)
+        let paliersGlobaux = [
+            { seuil: 0, prime: 0 },
+            { seuil: 80000, prime: 200 },
+            { seuil: 90000, prime: 350 },
+            { seuil: 100000, prime: 500 },
+            { seuil: 110000, prime: 750 }
+        ];
 
         function showTab(tabName) {
             // Cacher tous les contenus
@@ -461,14 +674,29 @@
                 updateVueEnsemble();
             } else if (tabName === 'vendeurs') {
                 updateVendeurs();
+            } else if (tabName === 'objectifs') {
+                updateObjectifs();
+            } else if (tabName === 'predictions') {
+                updatePredictions();
             } else if (tabName === 'tunnel') {
                 updateTunnel();
             }
         }
 
+        function calculerPrime(ca) {
+            let primeTotal = 0;
+            for (let i = paliersGlobaux.length - 1; i >= 0; i--) {
+                if (ca >= paliersGlobaux[i].seuil) {
+                    primeTotal = paliersGlobaux[i].prime;
+                    break;
+                }
+            }
+            return primeTotal;
+        }
+
         function updateVueEnsemble() {
-            let totalProspects = 0, totalDevis = 0, totalVentes = 0, totalCA = 0;
-            let bestVendeur = '', bestTaux = 0, bestCA = 0;
+            let totalProspects = 0, totalDevis = 0, totalVentes = 0, totalCA = 0, totalObjectif = 0;
+            let bestVendeur = '', bestTaux = 0, bestCA = 0, bestPrimes = 0;
 
             for (let vendeur in vendeursData) {
                 const data = vendeursData[vendeur];
@@ -476,19 +704,22 @@
                 totalDevis += data.devis;
                 totalVentes += data.ventes;
                 totalCA += data.ca;
+                totalObjectif += data.objectif;
 
                 const taux = data.prospects > 0 ? (data.ventes / data.prospects * 100) : 0;
+                const primes = calculerPrime(data.ca);
+                
                 if (taux > bestTaux) {
                     bestTaux = taux;
                     bestVendeur = vendeur;
                     bestCA = data.ca;
+                    bestPrimes = primes;
                 }
             }
 
             const tauxGlobal = totalProspects > 0 ? (totalVentes / totalProspects * 100) : 0;
-            const objectifCA = 50000;
-            const ecartCA = totalCA - objectifCA;
-            const progressCA = Math.min(100, (totalCA / objectifCA) * 100);
+            const ecartCA = totalCA - totalObjectif;
+            const progressCA = Math.min(100, (totalCA / totalObjectif) * 100);
 
             document.getElementById('total-prospects').textContent = totalProspects;
             document.getElementById('total-devis').textContent = totalDevis;
@@ -497,6 +728,7 @@
             document.getElementById('taux-global').className = 'metric-value ' + (tauxGlobal >= 20 ? 'positive' : tauxGlobal >= 15 ? 'neutral' : 'negative');
 
             document.getElementById('ca-realise').textContent = totalCA.toLocaleString() + ' €';
+            document.getElementById('objectif-ca-total').textContent = totalObjectif.toLocaleString() + ' €';
             document.getElementById('ecart-ca').textContent = (ecartCA >= 0 ? '+' : '') + ecartCA.toLocaleString() + ' €';
             document.getElementById('ecart-ca').className = 'metric-value ' + (ecartCA >= 0 ? 'positive' : 'negative');
             document.getElementById('progress-ca').style.width = progressCA + '%';
@@ -504,6 +736,7 @@
             document.getElementById('top-vendeur').textContent = bestVendeur;
             document.getElementById('top-taux').textContent = bestTaux.toFixed(1) + '%';
             document.getElementById('top-ca').textContent = bestCA.toLocaleString() + ' €';
+            document.getElementById('top-primes').textContent = bestPrimes.toLocaleString() + ' €';
 
             // Mise à jour du graphique objectifs
             updateChart();
@@ -517,6 +750,8 @@
                 const data = vendeursData[vendeur];
                 const taux = data.prospects > 0 ? (data.ventes / data.prospects * 100) : 0;
                 const tauxDevis = data.devis > 0 ? (data.ventes / data.devis * 100) : 0;
+                const progressObjectif = (data.ca / data.objectif) * 100;
+                const primes = calculerPrime(data.ca);
 
                 const card = document.createElement('div');
                 card.className = 'card vendeur-card';
@@ -547,12 +782,171 @@
                         <span class="metric-value positive">${data.ca.toLocaleString()} €</span>
                     </div>
                     <div class="metric">
+                        <span>Objectif mensuel</span>
+                        <span class="metric-value neutral">${data.objectif.toLocaleString()} €</span>
+                    </div>
+                    <div class="metric">
+                        <span>Progression objectif</span>
+                        <span class="metric-value ${progressObjectif >= 100 ? 'positive' : progressObjectif >= 80 ? 'neutral' : 'negative'}">${progressObjectif.toFixed(1)}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${Math.min(100, progressObjectif)}%"></div>
+                    </div>
+                    <div class="metric">
+                        <span>Primes gagnées</span>
+                        <span class="metric-value positive">${primes.toLocaleString()} €</span>
+                    </div>
+                    <div class="metric">
                         <span>Type principal</span>
                         <span class="metric-value neutral">${data.type}</span>
                     </div>
                 `;
                 grid.appendChild(card);
             }
+        }
+
+        function updateObjectifs() {
+            const grid = document.getElementById('objectifs-grid');
+            grid.innerHTML = '';
+
+            for (let vendeur in vendeursData) {
+                const data = vendeursData[vendeur];
+                const progressObjectif = (data.ca / data.objectif) * 100;
+                const primes = calculerPrime(data.ca);
+                
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <h3>🎯 ${vendeur}</h3>
+                    <div class="metric">
+                        <span>Objectif mensuel</span>
+                        <span class="metric-value neutral">${data.objectif.toLocaleString()} €</span>
+                    </div>
+                    <div class="metric">
+                        <span>CA actuel</span>
+                        <span class="metric-value ${data.ca >= data.objectif ? 'positive' : 'neutral'}">${data.ca.toLocaleString()} €</span>
+                    </div>
+                    <div class="metric">
+                        <span>Progression</span>
+                        <span class="metric-value ${progressObjectif >= 100 ? 'positive' : progressObjectif >= 80 ? 'neutral' : 'negative'}">${progressObjectif.toFixed(1)}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${Math.min(100, progressObjectif)}%"></div>
+                    </div>
+                    <div class="metric">
+                        <span>Primes actuelles</span>
+                        <span class="metric-value positive">${primes.toLocaleString()} €</span>
+                    </div>
+                    <div class="paliers-container">
+                        <h4>Paliers de primes :</h4>
+                        ${generatePaliersHTML(data.ca)}
+                    </div>
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        function generatePaliersHTML(caActuel) {
+            let html = '';
+            paliersGlobaux.forEach(palier => {
+                const isAtteint = caActuel >= palier.seuil;
+                const statusIcon = isAtteint ? '✅' : '⏳';
+                html += `
+                    <div class="palier-item" style="${isAtteint ? 'background: rgba(72, 187, 120, 0.1);' : ''}">
+                        <span>${statusIcon} ${palier.seuil.toLocaleString()} € et +</span>
+                        <span class="prime-badge" style="${isAtteint ? 'background: #48bb78;' : 'background: #cbd5e0; color: #4a5568;'}">${palier.prime} €</span>
+                    </div>
+                `;
+            });
+            return html;
+        }
+
+        function updatePredictions() {
+            // Calculs prédictifs basés sur les données actuelles
+            let totalCA = 0;
+            let totalObjectif = 0;
+            let tendances = [];
+
+            for (let vendeur in vendeursData) {
+                const data = vendeursData[vendeur];
+                totalCA += data.ca;
+                totalObjectif += data.objectif;
+                
+                // Calcul tendance individuelle
+                const progressJour = data.ca / 20; // Simulation : on est au 20e jour du mois
+                const projectionFinMois = progressJour * 30;
+                tendances.push({
+                    vendeur: vendeur,
+                    projection: projectionFinMois,
+                    objectif: data.objectif,
+                    performance: projectionFinMois / data.objectif
+                });
+            }
+
+            // Prédiction globale
+            const progressMoyen = totalCA / totalObjectif;
+            const projectionGlobale = (totalCA / 20) * 30; // Simulation
+            const probabiliteSucces = Math.min(95, progressMoyen * 100);
+
+            document.getElementById('prediction-ca').textContent = Math.round(projectionGlobale).toLocaleString() + ' €';
+            document.getElementById('prediction-probabilite').textContent = Math.round(probabiliteSucces) + '%';
+            
+            const tendanceText = probabiliteSucces >= 80 ? '📈 Excellente' : 
+                               probabiliteSucces >= 60 ? '📊 Bonne' : '📉 À surveiller';
+            document.getElementById('prediction-tendance').textContent = tendanceText;
+
+            // Recommandations IA
+            updateRecommendationsIA(tendances);
+
+            // Identification du vendeur à coacher
+            const vendeurEnDifficulte = tendances.reduce((min, vendeur) => 
+                vendeur.performance < min.performance ? vendeur : min
+            );
+
+            document.getElementById('vendeur-coaching').textContent = vendeurEnDifficulte.vendeur;
+            
+            if (vendeurEnDifficulte.performance < 0.7) {
+                document.getElementById('raison-coaching').textContent = 'Performance < 70% objectif';
+                document.getElementById('action-coaching').textContent = 'Accompagnement terrain urgent';
+            } else if (vendeurEnDifficulte.performance < 0.9) {
+                document.getElementById('raison-coaching').textContent = 'Risque de non-atteinte objectif';
+                document.getElementById('action-coaching').textContent = 'Coaching closing & suivi prospects';
+            } else {
+                document.getElementById('raison-coaching').textContent = 'Optimisation performance';
+                document.getElementById('action-coaching').textContent = 'Partage bonnes pratiques équipe';
+            }
+        }
+
+        function updateRecommendationsIA(tendances) {
+            const container = document.getElementById('recommendations-ia');
+            let recommendations = [];
+
+            // Analyse des tendances pour générer des recommandations
+            const performancesMoyennes = tendances.reduce((acc, v) => acc + v.performance, 0) / tendances.length;
+            
+            if (performancesMoyennes < 0.8) {
+                recommendations.push('🎯 Organiser une session de coaching collectif sur les techniques de closing');
+                recommendations.push('📞 Intensifier le suivi des devis en cours');
+            }
+            
+            const vendeurTop = tendances.reduce((max, v) => v.performance > max.performance ? v : max);
+            if (vendeurTop.performance > 1.2) {
+                recommendations.push(`🌟 Demander à ${vendeurTop.vendeur} de partager ses bonnes pratiques en équipe`);
+            }
+
+            const vendeursEnRetard = tendances.filter(v => v.performance < 0.7).length;
+            if (vendeursEnRetard > 1) {
+                recommendations.push('⚠️ Revoir les objectifs individuels - plusieurs vendeurs en difficulté');
+            }
+
+            recommendations.push('💡 Focus sur la qualification prospects pour améliorer taux transformation');
+            recommendations.push('📈 Augmenter fréquence relance devis (J+3, J+7, J+14)');
+
+            container.innerHTML = recommendations.map(rec => `
+                <div class="alert alert-info" style="margin: 8px 0; padding: 12px;">
+                    ${rec}
+                </div>
+            `).join('');
         }
 
         function updateTunnel() {
@@ -571,30 +965,33 @@
 
             const chart = document.getElementById('tunnel-chart');
             chart.innerHTML = `
-                <div style="display: flex; align-items: end; height: 100%; width: 100%; justify-content: space-around;">
-                    <div style="text-align: center;">
-                        <div class="bar" style="height: ${Math.max(20, totalProspects * 3)}px; background: linear-gradient(to top, #4299e1, #3182ce);"></div>
-                        <div style="margin-top: 10px; font-weight: bold; color: #2d3748;">Prospects</div>
-                        <div style="font-size: 1.2em; color: #3182ce;">${totalProspects}</div>
+                <div class="bar-group">
+                    <div class="bar" style="height: ${Math.max(20, Math.min(250, totalProspects * 3))}px; background: linear-gradient(to top, #4299e1, #3182ce);">
+                        <div class="bar-value">${totalProspects}</div>
                     </div>
-                    <div style="display: flex; align-items: center; padding: 0 20px;">
-                        <div style="color: #4a5568; font-weight: bold;">${tauxProspectDevis.toFixed(1)}%</div>
-                        <div style="width: 50px; height: 2px; background: #cbd5e0; margin: 0 10px;"></div>
+                    <div class="bar-label">Prospects</div>
+                </div>
+                <div style="display: flex; align-items: center; margin: 0 10px;">
+                    <div style="color: #4a5568; font-weight: bold; font-size: 0.9em;">${tauxProspectDevis.toFixed(1)}%</div>
+                    <div style="width: 30px; height: 2px; background: #cbd5e0; margin: 0 5px;"></div>
+                    <div style="font-size: 1.5em;">➡️</div>
+                </div>
+                <div class="bar-group">
+                    <div class="bar" style="height: ${Math.max(20, Math.min(250, totalDevis * 5))}px; background: linear-gradient(to top, #ed8936, #dd6b20);">
+                        <div class="bar-value">${totalDevis}</div>
                     </div>
-                    <div style="text-align: center;">
-                        <div class="bar" style="height: ${Math.max(20, totalDevis * 5)}px; background: linear-gradient(to top, #ed8936, #dd6b20);"></div>
-                        <div style="margin-top: 10px; font-weight: bold; color: #2d3748;">Devis</div>
-                        <div style="font-size: 1.2em; color: #dd6b20;">${totalDevis}</div>
+                    <div class="bar-label">Devis</div>
+                </div>
+                <div style="display: flex; align-items: center; margin: 0 10px;">
+                    <div style="color: #4a5568; font-weight: bold; font-size: 0.9em;">${tauxDevisVente.toFixed(1)}%</div>
+                    <div style="width: 30px; height: 2px; background: #cbd5e0; margin: 0 5px;"></div>
+                    <div style="font-size: 1.5em;">➡️</div>
+                </div>
+                <div class="bar-group">
+                    <div class="bar" style="height: ${Math.max(20, Math.min(250, totalVentes * 8))}px; background: linear-gradient(to top, #48bb78, #38a169);">
+                        <div class="bar-value">${totalVentes}</div>
                     </div>
-                    <div style="display: flex; align-items: center; padding: 0 20px;">
-                        <div style="color: #4a5568; font-weight: bold;">${tauxDevisVente.toFixed(1)}%</div>
-                        <div style="width: 50px; height: 2px; background: #cbd5e0; margin: 0 10px;"></div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div class="bar" style="height: ${Math.max(20, totalVentes * 8)}px; background: linear-gradient(to top, #48bb78, #38a169);"></div>
-                        <div style="margin-top: 10px; font-weight: bold; color: #2d3748;">Ventes</div>
-                        <div style="font-size: 1.2em; color: #38a169;">${totalVentes}</div>
-                    </div>
+                    <div class="bar-label">Ventes</div>
                 </div>
             `;
 
@@ -616,24 +1013,101 @@
         function updateChart() {
             const chart = document.getElementById('chart-objectifs');
             const vendeurs = Object.keys(vendeursData);
-            const objectifParVendeur = 8333; // 50000/6 vendeurs
 
-            let chartHTML = '';
+            let chartHTML = '<div style="display: flex; align-items: end; height: 100%; justify-content: space-around; overflow-x: auto; min-width: 100%;">';
             vendeurs.forEach(vendeur => {
-                const ca = vendeursData[vendeur].ca;
-                const height = Math.max(20, (ca / objectifParVendeur) * 200);
-                const color = ca >= objectifParVendeur ? '#48bb78' : ca >= objectifParVendeur * 0.8 ? '#ed8936' : '#e53e3e';
+                const data = vendeursData[vendeur];
+                const maxHeight = 200;
+                const maxObjectif = Math.max(...Object.values(vendeursData).map(v => v.objectif));
+                
+                const heightObjectif = Math.max(20, (data.objectif / maxObjectif) * maxHeight);
+                const heightCA = Math.max(20, (data.ca / maxObjectif) * maxHeight);
+                
+                const colorCA = data.ca >= data.objectif ? '#48bb78' : 
+                              data.ca >= data.objectif * 0.8 ? '#ed8936' : '#e53e3e';
                 
                 chartHTML += `
-                    <div style="text-align: center;">
-                        <div class="bar" style="height: ${height}px; background: ${color};">
-                            <div class="bar-value">${(ca/1000).toFixed(0)}k€</div>
+                    <div class="bar-group">
+                        <div style="display: flex; align-items: end;">
+                            <div class="bar" style="height: ${heightObjectif}px; background: #cbd5e0; width: 25px; margin-right: 5px;">
+                                <div class="bar-value" style="color: #4a5568;">${(data.objectif/1000).toFixed(0)}k€</div>
+                            </div>
+                            <div class="bar" style="height: ${heightCA}px; background: ${colorCA}; width: 25px;">
+                                <div class="bar-value">${(data.ca/1000).toFixed(0)}k€</div>
+                            </div>
                         </div>
                         <div class="bar-label">${vendeur}</div>
                     </div>
                 `;
             });
+            chartHTML += '</div>';
             chart.innerHTML = chartHTML;
+        }
+
+        // Fonctions d'administration
+        function definirObjectif() {
+            const vendeur = document.getElementById('admin-vendeur-select').value;
+            const objectif = parseInt(document.getElementById('admin-objectif-input').value) || 0;
+            
+            if (objectif > 0) {
+                vendeursData[vendeur].objectif = objectif;
+                document.getElementById('admin-objectif-input').value = '';
+                
+                showSuccessMessage('Objectif défini avec succès pour ' + vendeur + ' !');
+                updateVueEnsemble();
+            }
+        }
+
+        function ajouterPalier() {
+            const seuil = parseInt(document.getElementById('admin-seuil-input').value) || 0;
+            const prime = parseInt(document.getElementById('admin-prime-input').value) || 0;
+            
+            if (seuil > 0 && prime >= 0) {
+                // Ajouter ou mettre à jour le palier
+                const existingIndex = paliersGlobaux.findIndex(p => p.seuil === seuil);
+                if (existingIndex >= 0) {
+                    paliersGlobaux[existingIndex].prime = prime;
+                } else {
+                    paliersGlobaux.push({ seuil: seuil, prime: prime });
+                }
+                
+                // Trier les paliers par seuil
+                paliersGlobaux.sort((a, b) => a.seuil - b.seuil);
+                
+                document.getElementById('admin-seuil-input').value = '';
+                document.getElementById('admin-prime-input').value = '';
+                
+                showPaliersPreview();
+                showSuccessMessage('Palier ajouté avec succès !');
+            }
+        }
+
+        function showPaliersPreview() {
+            const container = document.getElementById('paliers-preview');
+            const list = document.getElementById('paliers-list');
+            
+            list.innerHTML = paliersGlobaux.map(palier => `
+                <div class="palier-item">
+                    <span>${palier.seuil.toLocaleString()} € et +</span>
+                    <span class="prime-badge">${palier.prime} €</span>
+                </div>
+            `).join('');
+            
+            container.style.display = 'block';
+        }
+
+        function reinitialiserPaliers() {
+            if (confirm('Êtes-vous sûr de vouloir réinitialiser tous les paliers de primes ?')) {
+                paliersGlobaux = [
+                    { seuil: 0, prime: 0 },
+                    { seuil: 80000, prime: 200 },
+                    { seuil: 90000, prime: 350 },
+                    { seuil: 100000, prime: 500 },
+                    { seuil: 110000, prime: 750 }
+                ];
+                showPaliersPreview();
+                showSuccessMessage('Paliers réinitialisés !');
+            }
         }
 
         function ajouterDonnees() {
@@ -659,22 +1133,57 @@
             document.getElementById('ventes-input').value = '';
             document.getElementById('ca-input').value = '';
 
-            // Afficher message de succès
+            showSuccessMessage('Données enregistrées avec succès !');
+            updateVueEnsemble();
+        }
+
+        function showSuccessMessage(message) {
             const successMsg = document.getElementById('success-message');
+            successMsg.textContent = '✅ ' + message;
             successMsg.style.display = 'block';
             setTimeout(() => {
                 successMsg.style.display = 'none';
             }, 3000);
+        }
 
-            // Mettre à jour tous les affichages
-            updateVueEnsemble();
+        function exporterDonnees() {
+            const dataToExport = {
+                vendeurs: vendeursData,
+                paliers: paliersGlobaux,
+                dateExport: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dashboard-commercial-' + new Date().toISOString().split('T')[0] + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showSuccessMessage('Données exportées avec succès !');
+        }
+
+        function reinitialiserDonnees() {
+            if (confirm('⚠️ ATTENTION : Cette action va supprimer toutes les données des vendeurs. Êtes-vous sûr ?')) {
+                vendeursData = {
+                    'Vincent': { prospects: 0, devis: 0, ventes: 0, ca: 0, type: 'Bois', objectif: 80000 },
+                    'Raphael': { prospects: 0, devis: 0, ventes: 0, ca: 0, type: 'Granulés', objectif: 100000 },
+                    'Léo': { prospects: 0, devis: 0, ventes: 0, ca: 0, type: 'Bois', objectif: 75000 },
+                    'Pablo': { prospects: 0, devis: 0, ventes: 0, ca: 0, type: 'Granulés', objectif: 90000 },
+                    'Nathan': { prospects: 0, devis: 0, ventes: 0, ca: 0, type: 'Mixte', objectif: 85000 }
+                };
+                updateVueEnsemble();
+                showSuccessMessage('Toutes les données ont été réinitialisées !');
+            }
         }
 
         // Initialisation au chargement
         document.addEventListener('DOMContentLoaded', function() {
             updateVueEnsemble();
-            updateVendeurs();
-            updateTunnel();
+            showPaliersPreview();
         });
     </script>
 </body>
