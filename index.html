@@ -1,687 +1,13 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Dashboard Commercial - Poêles & Granulés</title>
-   <style>
-       * {
-           margin: 0;
-           padding: 0;
-           box-sizing: border-box;
-       }
-
-       body {
-           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-           min-height: 100vh;
-           padding: 20px;
-       }
-
-       .container {
-           max-width: 1600px;
-           margin: 0 auto;
-       }
-
-       .header {
-           background: rgba(255, 255, 255, 0.95);
-           backdrop-filter: blur(10px);
-           border-radius: 15px;
-           padding: 30px;
-           margin-bottom: 20px;
-           text-align: center;
-           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-       }
-
-       .header h1 {
-           color: #2d3748;
-           font-size: 2.5em;
-           margin-bottom: 10px;
-           background: linear-gradient(45deg, #667eea, #764ba2);
-           -webkit-background-clip: text;
-           -webkit-text-fill-color: transparent;
-       }
-
-       .month-selector {
-           background: rgba(255, 255, 255, 0.9);
-           border-radius: 10px;
-           padding: 15px;
-           margin-bottom: 20px;
-           display: flex;
-           justify-content: space-between;
-           align-items: center;
-           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-       }
-
-       .tabs {
-           display: flex;
-           background: rgba(255, 255, 255, 0.9);
-           border-radius: 10px;
-           padding: 5px;
-           margin-bottom: 20px;
-           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-           flex-wrap: wrap;
-       }
-
-       .tab {
-           flex: 1;
-           min-width: 120px;
-           padding: 12px 15px;
-           border: none;
-           background: transparent;
-           border-radius: 8px;
-           cursor: pointer;
-           font-weight: 600;
-           transition: all 0.3s ease;
-           color: #4a5568;
-           text-align: center;
-       }
-
-       .tab.active {
-           background: linear-gradient(45deg, #667eea, #764ba2);
-           color: white;
-           transform: translateY(-2px);
-           box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-       }
-
-       .tab-content {
-           display: none;
-       }
-
-       .tab-content.active {
-           display: block;
-       }
-
-       .dashboard-grid {
-           display: grid;
-           grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-           gap: 20px;
-           margin-bottom: 30px;
-       }
-
-       .card {
-           background: rgba(255, 255, 255, 0.95);
-           backdrop-filter: blur(10px);
-           border-radius: 15px;
-           padding: 20px;
-           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-           transition: transform 0.3s ease;
-       }
-
-       .card:hover {
-           transform: translateY(-5px);
-       }
-
-       .card h3 {
-           color: #2d3748;
-           margin-bottom: 15px;
-           font-size: 1.3em;
-       }
-
-       .metric {
-           display: flex;
-           justify-content: space-between;
-           align-items: center;
-           padding: 10px 0;
-           border-bottom: 1px solid #e2e8f0;
-       }
-
-       .metric:last-child {
-           border-bottom: none;
-       }
-
-       .metric-value {
-           font-weight: bold;
-           font-size: 1.1em;
-       }
-
-       .positive { color: #38a169; }
-       .negative { color: #e53e3e; }
-       .neutral { color: #3182ce; }
-
-       .progress-bar {
-           width: 100%;
-           height: 10px;
-           background: #e2e8f0;
-           border-radius: 5px;
-           margin: 10px 0;
-           overflow: hidden;
-       }
-
-       .progress-fill {
-           height: 100%;
-           background: linear-gradient(45deg, #48bb78, #38a169);
-           transition: width 1s ease;
-       }
-
-       .input-group {
-           display: grid;
-           grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-           gap: 15px;
-           margin-bottom: 20px;
-       }
-
-       .input-field {
-           display: flex;
-           flex-direction: column;
-       }
-
-       .input-field label {
-           margin-bottom: 5px;
-           font-weight: 600;
-           color: #4a5568;
-       }
-
-       .input-field input, .input-field select {
-           padding: 10px;
-           border: 2px solid #e2e8f0;
-           border-radius: 8px;
-           font-size: 1em;
-       }
-
-       .btn {
-           padding: 12px 24px;
-           background: linear-gradient(45deg, #667eea, #764ba2);
-           color: white;
-           border: none;
-           border-radius: 8px;
-           cursor: pointer;
-           font-weight: 600;
-           margin: 5px;
-       }
-
-       .btn:hover {
-           transform: translateY(-2px);
-           box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-       }
-
-       .btn-danger {
-           background: linear-gradient(45deg, #e53e3e, #c53030);
-       }
-
-       .chart-container {
-           height: 300px;
-           display: flex;
-           align-items: end;
-           justify-content: space-around;
-           background: #f7fafc;
-           border-radius: 10px;
-           padding: 20px;
-           margin: 20px 0;
-       }
-
-       .bar-group {
-           display: flex;
-           flex-direction: column;
-           align-items: center;
-           min-width: 80px;
-           margin: 0 5px;
-       }
-
-       .bar {
-           background: linear-gradient(to top, #667eea, #764ba2);
-           border-radius: 4px 4px 0 0;
-           min-height: 20px;
-           width: 40px;
-           position: relative;
-       }
-
-       .bar-label {
-           margin-top: 10px;
-           font-size: 0.8em;
-           font-weight: 600;
-           color: #4a5568;
-           text-align: center;
-       }
-
-       .bar-value {
-           position: absolute;
-           top: -25px;
-           left: 50%;
-           transform: translateX(-50%);
-           font-size: 0.8em;
-           font-weight: bold;
-           color: #2d3748;
-           white-space: nowrap;
-       }
-
-       .alert {
-           padding: 15px;
-           border-radius: 8px;
-           margin: 10px 0;
-           font-weight: 600;
-       }
-
-       .alert-success {
-           background: rgba(72, 187, 120, 0.1);
-           border: 1px solid #48bb78;
-           color: #2f855a;
-       }
-
-       .alert-warning {
-           background: rgba(237, 137, 54, 0.1);
-           border: 1px solid #ed8936;
-           color: #c05621;
-       }
-
-       .alert-info {
-           background: rgba(66, 153, 225, 0.1);
-           border: 1px solid #4299e1;
-           color: #2b6cb0;
-       }
-
-       table {
-           width: 100%;
-           border-collapse: collapse;
-           margin-top: 15px;
-       }
-
-       table th {
-           padding: 12px;
-           background: linear-gradient(45deg, #667eea, #764ba2);
-           color: white;
-           text-align: left;
-       }
-
-       table td {
-           padding: 10px;
-           border-bottom: 1px solid #e2e8f0;
-       }
-
-       .notification {
-           position: fixed;
-           top: 20px;
-           right: 20px;
-           background: #38a169;
-           color: white;
-           padding: 15px 20px;
-           border-radius: 10px;
-           box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-           z-index: 1000;
-           transform: translateX(400px);
-           transition: transform 0.3s ease;
-       }
-
-       .notification.show {
-           transform: translateX(0);
-       }
-
-       .notification.warning {
-           background: #ed8936;
-       }
-
-       .notification.info {
-           background: #4299e1;
-       }
-   </style>
-</head>
-<body>
-   <div class="container">
-       <div class="header">
-           <h1>🔥 Dashboard Commercial - Poêles & Granulés</h1>
-           <p>Suivi mensuel des performances commerciales</p>
-       </div>
-
-       <!-- Sélecteur de mois -->
-       <div class="month-selector">
-           <div>
-               <span style="font-weight: 600;">📅 Mois actuel :</span>
-               <select id="mois-selector" style="margin-left: 10px; padding: 8px;">
-                   <option value="2025-08" selected>Août 2025</option>
-                   <option value="2025-07">Juillet 2025</option>
-                   <option value="2025-06">Juin 2025</option>
-                   <option value="2025-05">Mai 2025</option>
-                   <option value="2025-04">Avril 2025</option>
-                   <option value="2025-03">Mars 2025</option>
-                   <option value="2025-02">Février 2025</option>
-                   <option value="2025-01">Janvier 2025</option>
-               </select>
-           </div>
-           <button class="btn" onclick="changerMois()">🔄 Changer de mois</button>
-       </div>
-
-       <div class="tabs">
-           <button class="tab active" onclick="showTab('vue-ensemble', this)">📊 Vue d'ensemble</button>
-           <button class="tab" onclick="showTab('vendeurs', this)">👥 Vendeurs</button>
-           <button class="tab" onclick="showTab('objectifs', this)">🎯 Objectifs</button>
-           <button class="tab" onclick="showTab('historique', this)">📈 Historique</button>
-           <button class="tab" onclick="showTab('saisie', this)">📝 Saisie</button>
-           <button class="tab" onclick="showTab('admin', this)">⚙️ Admin</button>
-       </div>
-
-       <!-- Vue d'ensemble -->
-       <div id="vue-ensemble" class="tab-content active">
-           <div class="dashboard-grid">
-               <div class="card">
-                   <h3>📊 Performances du mois</h3>
-                   <div class="metric">
-                       <span>Prospects</span>
-                       <span class="metric-value neutral" id="total-prospects">0</span>
-                   </div>
-                   <div class="metric">
-                       <span>Devis</span>
-                       <span class="metric-value neutral" id="total-devis">0</span>
-                   </div>
-                   <div class="metric">
-                       <span>Ventes</span>
-                       <span class="metric-value positive" id="total-ventes">0</span>
-                   </div>
-                   <div class="metric">
-                       <span>Taux global</span>
-                       <span class="metric-value" id="taux-global">0%</span>
-                   </div>
-               </div>
-
-               <div class="card">
-                   <h3>💰 Chiffre d'affaires</h3>
-                   <div class="metric">
-                       <span>CA réalisé</span>
-                       <span class="metric-value positive" id="ca-realise">0 €</span>
-                   </div>
-                   <div class="metric">
-                       <span>Objectif équipe</span>
-                       <span class="metric-value neutral" id="objectif-total">0 €</span>
-                   </div>
-                   <div class="metric">
-                       <span>Écart</span>
-                       <span class="metric-value" id="ecart-ca">0 €</span>
-                   </div>
-                   <div class="progress-bar">
-                       <div class="progress-fill" id="progress-ca" style="width: 0%"></div>
-                   </div>
-               </div>
-
-               <div class="card">
-                   <h3>🏆 Top performer</h3>
-                   <div class="metric">
-                       <span>Meilleur vendeur</span>
-                       <span class="metric-value positive" id="top-vendeur">-</span>
-                   </div>
-                   <div class="metric">
-                       <span>CA généré</span>
-                       <span class="metric-value positive" id="top-ca">0 €</span>
-                   </div>
-                   <div class="metric">
-                       <span>Taux</span>
-                       <span class="metric-value positive" id="top-taux">0%</span>
-                   </div>
-               </div>
-
-               <div class="card" style="grid-column: 1 / -1;">
-                   <h3>📈 Graphique des performances</h3>
-                   <div class="chart-container" id="chart-vendeurs">
-                       <!-- Graphique généré par JS -->
-                   </div>
-               </div>
-           </div>
-       </div>
-
-       <!-- Vendeurs -->
-       <div id="vendeurs" class="tab-content">
-           <div class="dashboard-grid" id="vendeurs-grid">
-               <!-- Cartes vendeurs générées par JS -->
-           </div>
-       </div>
-
-       <!-- Objectifs -->
-       <div id="objectifs" class="tab-content">
-           <div class="dashboard-grid" id="objectifs-grid">
-               <!-- Cartes objectifs générées par JS -->
-           </div>
-       </div>
-
-       <!-- Historique -->
-       <div id="historique" class="tab-content">
-           <div class="dashboard-grid">
-               <div class="card" style="grid-column: 1 / -1;">
-                   <h3>📈 Évolution mensuelle</h3>
-                   <div class="chart-container" id="chart-historique">
-                       <!-- Graphique historique -->
-                   </div>
-               </div>
-               <div class="card" style="grid-column: 1 / -1;">
-                   <h3>📋 Tableau récapitulatif</h3>
-                   <table>
-                       <thead>
-                           <tr>
-                               <th>Mois</th>
-                               <th>Prospects</th>
-                               <th>Devis</th>
-                               <th>Ventes</th>
-                               <th>CA</th>
-                               <th>Objectif</th>
-                               <th>%</th>
-                           </tr>
-                       </thead>
-                       <tbody id="tableau-historique">
-                           <!-- Données historiques -->
-                       </tbody>
-                   </table>
-               </div>
-           </div>
-       </div>
-
-       <!-- Saisie -->
-       <div id="saisie" class="tab-content">
-           <div class="card">
-               <h3>📝 Saisie des données</h3>
-               <div class="input-group">
-                   <div class="input-field">
-                       <label>Vendeur</label>
-                       <select id="vendeur-select">
-                           <option value="Vincent">Vincent</option>
-                           <option value="Raphael">Raphael</option>
-                           <option value="Léo">Léo</option>
-                           <option value="Pablo">Pablo</option>
-                           <option value="Nathan">Nathan</option>
-                       </select>
-                   </div>
-                   <div class="input-field">
-                       <label>Prospects</label>
-                       <input type="number" id="prospects-input" min="0">
-                   </div>
-                   <div class="input-field">
-                       <label>Devis</label>
-                       <input type="number" id="devis-input" min="0">
-                   </div>
-                   <div class="input-field">
-                       <label>Ventes</label>
-                       <input type="number" id="ventes-input" min="0">
-                   </div>
-                   <div class="input-field">
-                       <label>CA (€)</label>
-                       <input type="number" id="ca-input" min="0">
-                   </div>
-               </div>
-               <button class="btn" onclick="sauvegarderDonnees()">💾 Enregistrer</button>
-           </div>
-       </div>
-
-       <!-- Admin -->
-       <div id="admin" class="tab-content">
-           <div class="dashboard-grid">
-               <div class="card">
-                   <h3>⚙️ Administration</h3>
-                   <button class="btn" onclick="exporterDonnees()">📥 Exporter</button>
-                   <button class="btn btn-danger" onclick="reinitialiser()">🔄 Réinitialiser</button>
-               </div>
-           </div>
-       </div>
-   </div>
-
-   <!-- Notification -->
-   <div class="notification" id="notification">
-       <span id="notification-text"></span>
-   </div>
-
-   <script>
-       // === DONNÉES DE BASE ===
-       let donneesMenuelles = {
-           '2025-01': {
-               'Vincent': { prospects: 12, devis: 6, ventes: 2, ca: 28000, objectif: 80000 },
-               'Raphael': { prospects: 10, devis: 8, ventes: 4, ca: 65000, objectif: 100000 },
-               'Léo': { prospects: 14, devis: 5, ventes: 1, ca: 15000, objectif: 75000 },
-               'Pablo': { prospects: 16, devis: 10, ventes: 5, ca: 72000, objectif: 90000 },
-               'Nathan': { prospects: 8, devis: 6, ventes: 3, ca: 48000, objectif: 85000 }
-           },
-           '2025-02': {
-               'Vincent': { prospects: 18, devis: 9, ventes: 4, ca: 42000, objectif: 80000 },
-               'Raphael': { prospects: 14, devis: 11, ventes: 6, ca: 89000, objectif: 100000 },
-               'Léo': { prospects: 20, devis: 7, ventes: 3, ca: 35000, objectif: 75000 },
-               'Pablo': { prospects: 22, devis: 14, ventes: 7, ca: 95000, objectif: 90000 },
-               'Nathan': { prospects: 12, devis: 8, ventes: 5, ca: 72000, objectif: 85000 }
-           },
-           '2025-03': {
-               'Vincent': { prospects: 16, devis: 10, ventes: 5, ca: 58000, objectif: 80000 },
-               'Raphael': { prospects: 15, devis: 12, ventes: 7, ca: 98000, objectif: 100000 },
-               'Léo': { prospects: 19, devis: 8, ventes: 4, ca: 48000, objectif: 75000 },
-               'Pablo': { prospects: 24, devis: 16, ventes: 8, ca: 105000, objectif: 90000 },
-               'Nathan': { prospects: 14, devis: 9, ventes: 6, ca: 85000, objectif: 85000 }
-           },
-           '2025-04': {
-               'Vincent': { prospects: 20, devis: 12, ventes: 6, ca: 72000, objectif: 80000 },
-               'Raphael': { prospects: 16, devis: 13, ventes: 8, ca: 115000, objectif: 100000 },
-               'Léo': { prospects: 22, devis: 10, ventes: 5, ca: 62000, objectif: 75000 },
-               'Pablo': { prospects: 26, devis: 18, ventes: 9, ca: 125000, objectif: 90000 },
-               'Nathan': { prospects: 16, devis: 11, ventes: 7, ca: 95000, objectif: 85000 }
-           },
-           '2025-05': {
-               'Vincent': { prospects: 18, devis: 11, ventes: 5, ca: 65000, objectif: 80000 },
-               'Raphael': { prospects: 17, devis: 14, ventes: 9, ca: 125000, objectif: 100000 },
-               'Léo': { prospects: 24, devis: 12, ventes: 6, ca: 75000, objectif: 75000 },
-               'Pablo': { prospects: 28, devis: 20, ventes: 10, ca: 142000, objectif: 90000 },
-               'Nathan': { prospects: 18, devis: 13, ventes: 8, ca: 108000, objectif: 85000 }
-           },
-           '2025-06': {
-               'Vincent': { prospects: 22, devis: 14, ventes: 7, ca: 85000, objectif: 80000 },
-               'Raphael': { prospects: 19, devis: 16, ventes: 10, ca: 142000, objectif: 100000 },
-               'Léo': { prospects: 26, devis: 14, ventes: 7, ca: 88000, objectif: 75000 },
-               'Pablo': { prospects: 30, devis: 22, ventes: 11, ca: 155000, objectif: 90000 },
-               'Nathan': { prospects: 20, devis: 15, ventes: 9, ca: 122000, objectif: 85000 }
-           },
-           '2025-07': {
-               'Vincent': { prospects: 19, devis: 12, ventes: 6, ca: 78000, objectif: 80000 },
-               'Raphael': { prospects: 18, devis: 15, ventes: 9, ca: 132000, objectif: 100000 },
-               'Léo': { prospects: 23, devis: 11, ventes: 5, ca: 68000, objectif: 75000 },
-               'Pablo': { prospects: 27, devis: 19, ventes: 10, ca: 145000, objectif: 90000 },
-               'Nathan': { prospects: 17, devis: 12, ventes: 7, ca: 98000, objectif: 85000 }
-           },
-           '2025-08': {
-               'Vincent': { prospects: 15, devis: 8, ventes: 3, ca: 32000, objectif: 80000 },
-               'Raphael': { prospects: 12, devis: 9, ventes: 5, ca: 78000, objectif: 100000 },
-               'Léo': { prospects: 18, devis: 6, ventes: 2, ca: 28000, objectif: 75000 },
-               'Pablo': { prospects: 20, devis: 12, ventes: 6, ca: 82000, objectif: 90000 },
-               'Nathan': { prospects: 10, devis: 7, ventes: 4, ca: 65000, objectif: 85000 }
-           }
-       };
-
-       let moisActuel = '2025-08';
-       let vendeursData = {};
-
-       // === FONCTIONS UTILITAIRES ===
-       function getMonthName(monthKey) {
-           const names = {
-               '2025-01': 'Janvier 2025',
-               '2025-02': 'Février 2025',
-               '2025-03': 'Mars 2025',
-               '2025-04': 'Avril 2025',
-               '2025-05': 'Mai 2025',
-               '2025-06': 'Juin 2025',
-               '2025-07': 'Juillet 2025',
-               '2025-08': 'Août 2025'
-           };
-           return names[monthKey] || monthKey;
-       }
-
-       function showNotification(message, type = 'success') {
-           const notification = document.getElementById('notification');
-           const text = document.getElementById('notification-text');
-           
-           text.textContent = message;
-           notification.className = `notification ${type} show`;
-           
-           setTimeout(() => {
-               notification.classList.remove('show');
-           }, 3000);
-       }
-
-       // === NAVIGATION ===
-       function showTab(tabName, tabElement) {
-           // Masquer tous les contenus
-           document.querySelectorAll('.tab-content').forEach(content => {
-               content.classList.remove('active');
-           });
-           
-           // Désactiver tous les onglets
-           document.querySelectorAll('.tab').forEach(tab => {
-               tab.classList.remove('active');
-           });
-           
-           // Activer l'onglet sélectionné
-           document.getElementById(tabName).classList.add('active');
-           tabElement.classList.add('active');
-           
-           // Mettre à jour les données
-           switch(tabName) {
-               case 'vue-ensemble':
-                   updateVueEnsemble();
-                   break;
-               case 'vendeurs':
-                   updateVendeurs();
-                   break;
-               case 'objectifs':
-                   updateObjectifs();
-                   break;
-               case 'historique':
-                   updateHistorique();
-                   break;
-           }
-       }
-
-       function changerMois() {
-           const selector = document.getElementById('mois-selector');
-           moisActuel = selector.value;
-           vendeursData = JSON.parse(JSON.stringify(donneesMenuelles[moisActuel]));
-           updateVueEnsemble();
-           showNotification(`Basculé sur ${getMonthName(moisActuel)}`);
-       }
-
-       // === MISES À JOUR ===
-       function updateVueEnsemble() {
-           let totalProspects = 0;
-           let totalDevis = 0;
-           let totalVentes = 0;
-           let totalCA = 0;
-           let totalObjectif = 0;
-           let bestVendeur = '';
-           let bestCA = 0;
-           let bestTaux = 0;
-
-           for (let vendeur in vendeursData) {
-               const data = vendeursData[vendeur];
-               totalProspects += data.prospects;
-               totalDevis += data.devis;
-               totalVentes += data.ventes;
-               totalCA += data.ca;
-               totalObjectif += data.objectif;
-
-               const taux = data.prospects > 0 ? (data.ventes / data.prospects * 100) : 0;
-               if (data.ca > bestCA) {
-                   bestCA = data.ca;
-                   bestVendeur = vendeur;
-                   bestTaux = taux;
-               }
-           }
-
-           const tauxGlobal = totalProspects > 0 ? (totalVentes / totalProspects * 100) : 0;
-           const ecartCA = totalCA - totalObjectif;
-           const progressCA = totalObjectif > 0 ? (totalCA / totalObjectif * 100) : 0;
+const margeMoyenne = totalVentes > 0 ? totalMarge / totalVentes : 0;
 
            document.getElementById('total-prospects').textContent = totalProspects;
            document.getElementById('total-devis').textContent = totalDevis;
            document.getElementById('total-ventes').textContent = totalVentes;
            document.getElementById('taux-global').textContent = tauxGlobal.toFixed(1) + '%';
            document.getElementById('taux-global').className = 'metric-value ' + (tauxGlobal >= 20 ? 'positive' : 'neutral');
+           
+           document.getElementById('marge-moyenne').textContent = Math.round(margeMoyenne).toLocaleString() + ' €';
+           document.getElementById('marge-moyenne').className = 'metric-value ' + (margeMoyenne >= MARGE_MINIMUM ? 'positive' : 'negative');
 
            document.getElementById('ca-realise').textContent = totalCA.toLocaleString() + ' €';
            document.getElementById('objectif-total').textContent = totalObjectif.toLocaleString() + ' €';
@@ -694,7 +20,39 @@
            document.getElementById('top-ca').textContent = bestCA.toLocaleString() + ' €';
            document.getElementById('top-taux').textContent = bestTaux.toFixed(1) + '%';
 
+           // Mettre à jour les alertes marges
+           updateAlertesMarges(vendeursEnAlerteMarge);
            updateChart();
+       }
+
+       function updateAlertesMarges(vendeursEnAlerte) {
+           const container = document.getElementById('alertes-marges');
+           
+           if (vendeursEnAlerte.length === 0) {
+               container.innerHTML = `
+                   <div class="alert alert-success">
+                       <strong>✅ Excellent !</strong> Toutes les marges respectent le minimum de ${MARGE_MINIMUM.toLocaleString()}€
+                   </div>
+               `;
+           } else {
+               let alertesHTML = `
+                   <div class="alert alert-warning">
+                       <strong>⚠️ ${vendeursEnAlerte.length} vendeur(s) en dessous de la marge minimum :</strong>
+                   </div>
+               `;
+               
+               vendeursEnAlerte.forEach(vendeur => {
+                   alertesHTML += `
+                       <div class="alert alert-warning" style="margin: 8px 0; padding: 12px;">
+                           <strong>${vendeur.nom}</strong> : ${vendeur.marge.toLocaleString()}€ 
+                           (-${vendeur.ecart.toLocaleString()}€)
+                           <br><small>💡 Action : revoir stratégie tarifaire</small>
+                       </div>
+                   `;
+               });
+               
+               container.innerHTML = alertesHTML;
+           }
        }
 
        function updateChart() {
@@ -730,4 +88,277 @@
                const taux = data.prospects > 0 ? (data.ventes / data.prospects * 100) : 0;
                const progression = data.objectif > 0 ? (data.ca / data.objectif * 100) : 0;
 
-               const
+               const card = document.createElement('div');
+               card.className = 'card';
+               card.innerHTML = `
+                   <h3>👤 ${vendeur}</h3>
+                   <div class="metric">
+                       <span>Prospects</span>
+                       <span class="metric-value neutral">${data.prospects}</span>
+                   </div>
+                   <div class="metric">
+                       <span>Devis</span>
+                       <span class="metric-value neutral">${data.devis}</span>
+                   </div>
+                   <div class="metric">
+                       <span>Ventes</span>
+                       <span class="metric-value positive">${data.ventes}</span>
+                   </div>
+                   <div class="metric">
+                       <span>CA</span>
+                       <span class="metric-value positive">${data.ca.toLocaleString()} €</span>
+                   </div>
+                   <div class="metric">
+                       <span>Objectif</span>
+                       <span class="metric-value neutral">${data.objectif.toLocaleString()} €</span>
+                   </div>
+                   <div class="metric">
+                       <span>Taux</span>
+                       <span class="metric-value ${taux >= 25 ? 'positive' : 'neutral'}">${taux.toFixed(1)}%</span>
+                   </div>
+                   <div class="metric">
+                       <span>Marge moyenne</span>
+                       <span class="metric-value ${data.marge >= MARGE_MINIMUM ? 'positive' : 'negative'}">${data.marge.toLocaleString()} €</span>
+                   </div>
+                   <div class="metric">
+                       <span>Progression</span>
+                       <span class="metric-value ${progression >= 100 ? 'positive' : 'neutral'}">${progression.toFixed(1)}%</span>
+                   </div>
+                   <div class="progress-bar">
+                       <div class="progress-fill" style="width: ${Math.min(100, progression)}%"></div>
+                   </div>
+                   ${data.marge < MARGE_MINIMUM ? `
+                       <div class="alert alert-warning" style="margin-top: 10px;">
+                           <strong>⚠️ Marge insuffisante :</strong> ${MARGE_MINIMUM - data.marge}€ en dessous du minimum requis
+                       </div>
+                   ` : ''}
+               `;
+               grid.appendChild(card);
+           }
+       }
+
+       function updateObjectifs() {
+           const grid = document.getElementById('objectifs-grid');
+           grid.innerHTML = '';
+
+           for (let vendeur in vendeursData) {
+               const data = vendeursData[vendeur];
+               const progression = data.objectif > 0 ? (data.ca / data.objectif * 100) : 0;
+               const ecart = data.ca - data.objectif;
+
+               const card = document.createElement('div');
+               card.className = 'card';
+               card.innerHTML = `
+                   <h3>🎯 ${vendeur}</h3>
+                   <div class="metric">
+                       <span>Objectif</span>
+                       <span class="metric-value neutral">${data.objectif.toLocaleString()} €</span>
+                   </div>
+                   <div class="metric">
+                       <span>Réalisé</span>
+                       <span class="metric-value positive">${data.ca.toLocaleString()} €</span>
+                   </div>
+                   <div class="metric">
+                       <span>Écart</span>
+                       <span class="metric-value ${ecart >= 0 ? 'positive' : 'negative'}">${ecart >= 0 ? '+' : ''}${ecart.toLocaleString()} €</span>
+                   </div>
+                   <div class="metric">
+                       <span>Progression</span>
+                       <span class="metric-value ${progression >= 100 ? 'positive' : 'neutral'}">${progression.toFixed(1)}%</span>
+                   </div>
+                   <div class="progress-bar">
+                       <div class="progress-fill" style="width: ${Math.min(100, progression)}%"></div>
+                   </div>
+                   <div style="margin-top: 15px; padding: 10px; background: #f7fafc; border-radius: 8px;">
+                       <strong>Primes :</strong><br>
+                       <small style="color: ${data.ca >= 80000 ? '#38a169' : '#a0aec0'};">✓ 80k€ → 200€</small><br>
+                       <small style="color: ${data.ca >= 100000 ? '#38a169' : '#a0aec0'};">✓ 100k€ → 500€</small><br>
+                       <small style="color: ${data.ca >= 120000 ? '#38a169' : '#a0aec0'};">✓ 120k€ → 750€</small>
+                   </div>
+               `;
+               grid.appendChild(card);
+           }
+       }
+
+       function updateHistorique() {
+           updateChartHistorique();
+           updateTableauHistorique();
+       }
+
+       function updateChartHistorique() {
+           const chart = document.getElementById('chart-historique');
+           const mois = Object.keys(donneesMenuelles).sort();
+           
+           const totauxParMois = mois.map(mois => {
+               let totalCA = 0;
+               for (let vendeur in donneesMenuelles[mois]) {
+                   totalCA += donneesMenuelles[mois][vendeur].ca;
+               }
+               return { mois, ca: totalCA };
+           });
+           
+           const maxCA = Math.max(...totauxParMois.map(t => t.ca));
+           
+           let html = '';
+           totauxParMois.forEach(({mois, ca}) => {
+               const height = maxCA > 0 ? Math.max(30, (ca / maxCA) * 200) : 30;
+               const monthName = getMonthName(mois).split(' ')[0].substring(0, 3);
+               const isCurrentMonth = mois === moisActuel;
+               
+               html += `
+                   <div class="bar-group">
+                       <div class="bar" style="
+                           height: ${height}px; 
+                           background: ${isCurrentMonth ? '#667eea' : '#48bb78'};
+                           ${isCurrentMonth ? 'box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);' : ''}
+                       ">
+                           <div class="bar-value">${(ca/1000).toFixed(0)}k€</div>
+                       </div>
+                       <div class="bar-label" style="font-weight: ${isCurrentMonth ? 'bold' : 'normal'};">${monthName}</div>
+                   </div>
+               `;
+           });
+           
+           chart.innerHTML = html;
+       }
+
+       function updateTableauHistorique() {
+           const tbody = document.getElementById('tableau-historique');
+           const mois = Object.keys(donneesMenuelles).sort();
+           
+           tbody.innerHTML = mois.map(mois => {
+               let totalProspects = 0, totalDevis = 0, totalVentes = 0, totalCA = 0, totalObjectif = 0;
+               
+               for (let vendeur in donneesMenuelles[mois]) {
+                   const data = donneesMenuelles[mois][vendeur];
+                   totalProspects += data.prospects;
+                   totalDevis += data.devis;
+                   totalVentes += data.ventes;
+                   totalCA += data.ca;
+                   totalObjectif += data.objectif;
+               }
+               
+               const progression = totalObjectif > 0 ? (totalCA / totalObjectif * 100) : 0;
+               const isCurrentMonth = mois === moisActuel;
+               
+               return `
+                   <tr style="background: ${isCurrentMonth ? 'rgba(102, 126, 234, 0.1)' : 'white'}; font-weight: ${isCurrentMonth ? 'bold' : 'normal'};">
+                       <td>${getMonthName(mois)}</td>
+                       <td>${totalProspects}</td>
+                       <td>${totalDevis}</td>
+                       <td>${totalVentes}</td>
+                       <td>${totalCA.toLocaleString()}€</td>
+                       <td>${totalObjectif.toLocaleString()}€</td>
+                       <td style="color: ${progression >= 100 ? '#38a169' : progression >= 80 ? '#ed8936' : '#e53e3e'};">${progression.toFixed(1)}%</td>
+                   </tr>
+               `;
+           }).join('');
+       }
+
+       // === SAISIE ET ADMINISTRATION ===
+       function sauvegarderDonnees() {
+           const vendeur = document.getElementById('vendeur-select').value;
+           const prospects = parseInt(document.getElementById('prospects-input').value) || 0;
+           const devis = parseInt(document.getElementById('devis-input').value) || 0;
+           const ventes = parseInt(document.getElementById('ventes-input').value) || 0;
+           const ca = parseInt(document.getElementById('ca-input').value) || 0;
+           const marge = parseInt(document.getElementById('marge-input').value) || 0;
+
+           if (prospects === 0 && devis === 0 && ventes === 0 && ca === 0) {
+               showNotification('Veuillez saisir au moins une valeur', 'warning');
+               return;
+           }
+
+           if (ventes > devis && devis > 0) {
+               showNotification('Erreur : les ventes ne peuvent pas dépasser les devis', 'warning');
+               return;
+           }
+
+           if (devis > prospects && prospects > 0) {
+               showNotification('Erreur : les devis ne peuvent pas dépasser les prospects', 'warning');
+               return;
+           }
+
+           // Mise à jour des données
+           const data = vendeursData[vendeur];
+           const ventesActuelles = data.ventes;
+           const margeActuelle = data.marge;
+           
+           data.prospects += prospects;
+           data.devis += devis;
+           data.ventes += ventes;
+           data.ca += ca;
+           
+           // Calcul de la nouvelle marge moyenne pondérée
+           if (ventes > 0 && marge > 0) {
+               const margeTotal = (margeActuelle * ventesActuelles) + (marge * ventes);
+               data.marge = Math.round(margeTotal / (ventesActuelles + ventes));
+           }
+
+           // Sauvegarder dans l'historique
+           donneesMenuelles[moisActuel] = JSON.parse(JSON.stringify(vendeursData));
+
+           // Réinitialiser le formulaire
+           document.getElementById('prospects-input').value = '';
+           document.getElementById('devis-input').value = '';
+           document.getElementById('ventes-input').value = '';
+           document.getElementById('ca-input').value = '';
+           document.getElementById('marge-input').value = '';
+
+           showNotification(`Données sauvegardées pour ${vendeur}`);
+           updateVueEnsemble();
+       }
+
+       function exporterDonnees() {
+           const dataToExport = {
+               donneesMenuelles: donneesMenuelles,
+               moisActuel: moisActuel,
+               dateExport: new Date().toISOString(),
+               version: "1.0"
+           };
+           
+           const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {type: 'application/json'});
+           const url = URL.createObjectURL(blob);
+           const a = document.createElement('a');
+           a.href = url;
+           a.download = `dashboard-commercial-${new Date().getFullYear()}.json`;
+           document.body.appendChild(a);
+           a.click();
+           document.body.removeChild(a);
+           URL.revokeObjectURL(url);
+           
+           showNotification('Données exportées avec succès !');
+       }
+
+       function reinitialiser() {
+           if (confirm('Êtes-vous sûr de vouloir réinitialiser toutes les données ?')) {
+               // Réinitialiser le mois actuel uniquement
+               donneesMenuelles[moisActuel] = {
+                   'Vincent': { prospects: 0, devis: 0, ventes: 0, ca: 0, objectif: 80000, marge: 2000 },
+                   'Raphael': { prospects: 0, devis: 0, ventes: 0, ca: 0, objectif: 100000, marge: 2000 },
+                   'Léo': { prospects: 0, devis: 0, ventes: 0, ca: 0, objectif: 75000, marge: 2000 },
+                   'Pablo': { prospects: 0, devis: 0, ventes: 0, ca: 0, objectif: 90000, marge: 2000 },
+                   'Nathan': { prospects: 0, devis: 0, ventes: 0, ca: 0, objectif: 85000, marge: 2000 }
+               };
+               vendeursData = JSON.parse(JSON.stringify(donneesMenuelles[moisActuel]));
+               updateVueEnsemble();
+               showNotification(`Données du mois réinitialisées`, 'warning');
+           }
+       }
+
+       // === INITIALISATION ===
+       document.addEventListener('DOMContentLoaded', function() {
+           // Charger les données du mois actuel
+           vendeursData = JSON.parse(JSON.stringify(donneesMenuelles[moisActuel]));
+           
+           // Mise à jour initiale
+           updateVueEnsemble();
+           
+           // Message de bienvenue
+           setTimeout(() => {
+               showNotification('Dashboard chargé avec succès ! 🚀');
+           }, 1000);
+       });
+   </script>
+</body>
+</html>
