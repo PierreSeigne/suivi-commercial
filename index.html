@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Commercial - Poêles & Granulés</title>
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(45deg, #667eea, #764ba2);
+            --success-color: #38a169;
+            --warning-color: #ed8936;
+            --danger-color: #e53e3e;
+            --info-color: #3182ce;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,9 +24,10 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary-gradient);
             min-height: 100vh;
             padding: 20px;
+            overflow-x: hidden;
         }
 
         .container {
@@ -24,53 +36,139 @@
         }
 
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
             text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
         .header h1 {
             color: #2d3748;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            font-size: clamp(2rem, 4vw, 2.5rem);
+            margin-bottom: 15px;
+            background: var(--secondary-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            color: #4a5568;
+            font-size: 1.1rem;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stats-ticker {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            padding: 10px 20px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .ticker-item {
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .ticker-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--info-color);
+        }
+
+        .ticker-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 2px;
         }
 
         .tabs {
             display: flex;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 5px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background: var(--glass-bg);
+            border-radius: 15px;
+            padding: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             flex-wrap: wrap;
+            gap: 5px;
+            backdrop-filter: blur(10px);
         }
 
         .tab {
             flex: 1;
-            min-width: 120px;
-            padding: 12px 15px;
+            min-width: 140px;
+            padding: 15px 20px;
             border: none;
             background: transparent;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             color: #4a5568;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: var(--secondary-gradient);
+            transition: all 0.3s ease;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+        }
+
+        .tab:hover::before {
+            width: 120%;
+            height: 120%;
         }
 
         .tab.active {
-            background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .tab.active::before {
+            width: 120%;
+            height: 120%;
         }
 
         .tab-content {
@@ -79,273 +177,458 @@
 
         .tab-content.active {
             display: block;
-            animation: fadeIn 0.3s ease;
+            animation: fadeInUp 0.5s ease-out;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
         }
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
             margin-bottom: 30px;
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--secondary-gradient);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
         }
 
         .card h3 {
             color: #2d3748;
-            margin-bottom: 15px;
-            font-size: 1.3em;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .metric {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        .metric:hover {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 8px;
+            padding-left: 10px;
+            padding-right: 10px;
         }
 
         .metric:last-child {
             border-bottom: none;
         }
 
-        .metric-value {
-            font-weight: bold;
-            font-size: 1.2em;
+        .metric-label {
+            font-weight: 500;
+            color: #4a5568;
         }
 
-        .positive { color: #38a169; }
-        .negative { color: #e53e3e; }
-        .neutral { color: #3182ce; }
+        .metric-value {
+            font-weight: 700;
+            font-size: 1.2em;
+            padding: 4px 12px;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .positive { 
+            color: white; 
+            background: linear-gradient(45deg, var(--success-color), #48bb78);
+            box-shadow: 0 4px 15px rgba(56, 161, 105, 0.3);
+        }
+        .negative { 
+            color: white; 
+            background: linear-gradient(45deg, var(--danger-color), #f56565);
+            box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
+        }
+        .neutral { 
+            color: white; 
+            background: linear-gradient(45deg, var(--info-color), #4299e1);
+            box-shadow: 0 4px 15px rgba(49, 130, 206, 0.3);
+        }
 
         .progress-bar {
             width: 100%;
-            height: 10px;
-            background: #e2e8f0;
-            border-radius: 5px;
-            margin: 10px 0;
+            height: 12px;
+            background: rgba(226, 232, 240, 0.5);
+            border-radius: 6px;
+            margin: 15px 0;
             overflow: hidden;
+            position: relative;
         }
 
         .progress-fill {
             height: 100%;
             background: linear-gradient(45deg, #48bb78, #38a169);
-            transition: width 0.3s ease;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 6px;
+            position: relative;
         }
 
-        .vendeur-card {
-            border-left: 4px solid #667eea;
+        .progress-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: progressShimmer 2s infinite;
+        }
+
+        @keyframes progressShimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
         .input-group {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
         }
 
         .input-field {
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .input-field label {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: 600;
             color: #4a5568;
+            font-size: 0.9rem;
         }
 
         .input-field input, .input-field select {
-            padding: 10px;
+            padding: 12px 15px;
             border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: border-color 0.3s ease;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
         }
 
         .input-field input:focus, .input-field select:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
         }
 
         .btn {
             padding: 12px 24px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: var(--secondary-gradient);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             margin: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
         }
 
         .btn-danger {
-            background: linear-gradient(45deg, #e53e3e, #c53030);
+            background: linear-gradient(45deg, var(--danger-color), #f56565);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 10px 30px rgba(229, 62, 62, 0.4);
         }
 
         .chart-container {
-            height: 300px;
+            height: 320px;
             display: flex;
             align-items: end;
             justify-content: space-around;
-            background: #f7fafc;
-            border-radius: 10px;
-            padding: 20px;
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            border-radius: 15px;
+            padding: 25px;
             margin: 20px 0;
             overflow-x: auto;
+            position: relative;
+        }
+
+        .chart-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="%23e2e8f0" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+            pointer-events: none;
         }
 
         .bar-group {
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-width: 80px;
-            margin: 0 5px;
+            min-width: 90px;
+            margin: 0 8px;
+            position: relative;
+            z-index: 1;
         }
 
         .bar {
-            background: linear-gradient(to top, #667eea, #764ba2);
-            border-radius: 4px 4px 0 0;
-            min-height: 20px;
-            width: 40px;
+            background: var(--secondary-gradient);
+            border-radius: 6px 6px 0 0;
+            min-height: 25px;
+            width: 45px;
             position: relative;
-            transition: height 0.5s ease;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .bar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
 
         .bar-label {
-            margin-top: 10px;
-            font-size: 0.8em;
+            margin-top: 12px;
+            font-size: 0.85em;
             font-weight: 600;
             color: #4a5568;
             text-align: center;
-            max-width: 60px;
+            max-width: 70px;
             word-wrap: break-word;
         }
 
         .bar-value {
             position: absolute;
-            top: -25px;
+            top: -30px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.8em;
+            font-size: 0.85em;
             font-weight: bold;
             color: #2d3748;
             white-space: nowrap;
+            background: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin: 12px 0;
             font-weight: 600;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: currentColor;
         }
 
         .alert-success {
             background: rgba(72, 187, 120, 0.1);
-            border: 1px solid #48bb78;
             color: #2f855a;
+            border-left: 4px solid var(--success-color);
         }
 
         .alert-warning {
             background: rgba(237, 137, 54, 0.1);
-            border: 1px solid #ed8936;
             color: #c05621;
+            border-left: 4px solid var(--warning-color);
         }
 
         .alert-info {
             background: rgba(66, 153, 225, 0.1);
-            border: 1px solid #4299e1;
             color: #2b6cb0;
-        }
-
-        .paliers-container {
-            background: #f7fafc;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
-        }
-
-        .palier-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .palier-item:last-child {
-            border-bottom: none;
-        }
-
-        .prime-badge {
-            background: linear-gradient(45deg, #48bb78, #38a169);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: bold;
+            border-left: 4px solid var(--info-color);
         }
 
         .prediction-card {
             background: linear-gradient(135deg, #4299e1, #3182ce);
             color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .prediction-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .prediction-card h3 {
             color: white;
+            position: relative;
+            z-index: 1;
         }
 
         .ai-indicator {
             display: inline-block;
             background: rgba(255, 255, 255, 0.2);
-            padding: 4px 8px;
-            border-radius: 12px;
+            padding: 4px 12px;
+            border-radius: 15px;
             font-size: 0.8em;
-            margin-left: 8px;
+            margin-left: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        .floating-stats {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 15px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border: 1px solid var(--glass-border);
+        }
+
+        .floating-stats:hover {
+            transform: scale(1.05);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success-color);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .notification.show {
+            transform: translateX(0);
         }
 
         @media (max-width: 768px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .tabs {
-                flex-direction: column;
-            }
-            
-            .header h1 {
-                font-size: 2em;
-            }
+            .container { padding: 10px; }
+            .header { padding: 20px; margin-bottom: 20px; }
+            .dashboard-grid { grid-template-columns: 1fr; gap: 15px; }
+            .tabs { flex-direction: column; }
+            .chart-container { height: 250px; padding: 15px; }
+            .input-group { grid-template-columns: 1fr; }
+            .floating-stats { display: none; }
+        }
 
-            .chart-container {
-                height: 250px;
-            }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
@@ -353,17 +636,35 @@
     <div class="container">
         <div class="header">
             <h1>🔥 Dashboard Commercial - Poêles & Granulés</h1>
-            <p>Suivi des performances de votre équipe de vente</p>
+            <p>Suivi des performances en temps réel de votre équipe de vente</p>
+            <div class="stats-ticker">
+                <div class="ticker-item">
+                    <div class="ticker-value" id="ticker-ca">0€</div>
+                    <div class="ticker-label">CA Total</div>
+                </div>
+                <div class="ticker-item">
+                    <div class="ticker-value" id="ticker-ventes">0</div>
+                    <div class="ticker-label">Ventes</div>
+                </div>
+                <div class="ticker-item">
+                    <div class="ticker-value" id="ticker-taux">0%</div>
+                    <div class="ticker-label">Taux Global</div>
+                </div>
+                <div class="ticker-item">
+                    <div class="ticker-value" id="ticker-objectif">0%</div>
+                    <div class="ticker-label">Objectif</div>
+                </div>
+            </div>
         </div>
 
         <div class="tabs">
-            <button class="tab active" onclick="showTab('vue-ensemble')">Vue d'ensemble</button>
-            <button class="tab" onclick="showTab('vendeurs')">Vendeurs</button>
-            <button class="tab" onclick="showTab('objectifs')">Objectifs & Primes</button>
-            <button class="tab" onclick="showTab('predictions')">Prédictions IA</button>
-            <button class="tab" onclick="showTab('tunnel')">Tunnel conversion</button>
-            <button class="tab" onclick="showTab('saisie')">Saisie données</button>
-            <button class="tab" onclick="showTab('admin')">Administration</button>
+            <button class="tab active" onclick="showTab('vue-ensemble')">📊 Vue d'ensemble</button>
+            <button class="tab" onclick="showTab('vendeurs')">👥 Vendeurs</button>
+            <button class="tab" onclick="showTab('objectifs')">🎯 Objectifs & Primes</button>
+            <button class="tab" onclick="showTab('predictions')">🤖 Prédictions IA</button>
+            <button class="tab" onclick="showTab('tunnel')">🔄 Tunnel conversion</button>
+            <button class="tab" onclick="showTab('saisie')">📝 Saisie données</button>
+            <button class="tab" onclick="showTab('admin')">⚙️ Administration</button>
         </div>
 
         <!-- Vue d'ensemble -->
@@ -372,39 +673,39 @@
                 <div class="card">
                     <h3>📊 Performances du mois</h3>
                     <div class="metric">
-                        <span>Nombre de rdv</span>
+                        <span class="metric-label">Nombre de rdv</span>
                         <span class="metric-value neutral" id="total-prospects">0</span>
                     </div>
                     <div class="metric">
-                        <span>Devis envoyés</span>
+                        <span class="metric-label">Devis envoyés</span>
                         <span class="metric-value neutral" id="total-devis">0</span>
                     </div>
                     <div class="metric">
-                        <span>Ventes réalisées</span>
+                        <span class="metric-label">Ventes réalisées</span>
                         <span class="metric-value positive" id="total-ventes">0</span>
                     </div>
                     <div class="metric">
-                        <span>Taux transformation global</span>
+                        <span class="metric-label">Taux transformation global</span>
                         <span class="metric-value" id="taux-global">0%</span>
                     </div>
                     <div class="metric">
-                        <span>Marge moyenne équipe</span>
+                        <span class="metric-label">Marge moyenne équipe</span>
                         <span class="metric-value" id="marge-moyenne">0 €</span>
                     </div>
                 </div>
 
-                <div class="card">
+                <div class="card pulse">
                     <h3>💰 Chiffre d'affaires</h3>
                     <div class="metric">
-                        <span>CA réalisé</span>
+                        <span class="metric-label">CA réalisé</span>
                         <span class="metric-value positive" id="ca-realise">0 €</span>
                     </div>
                     <div class="metric">
-                        <span>Objectif mensuel équipe</span>
+                        <span class="metric-label">Objectif mensuel équipe</span>
                         <span class="metric-value neutral" id="objectif-ca-total">0 €</span>
                     </div>
                     <div class="metric">
-                        <span>Écart objectif</span>
+                        <span class="metric-label">Écart objectif</span>
                         <span class="metric-value" id="ecart-ca">0 €</span>
                     </div>
                     <div class="progress-bar">
@@ -415,19 +716,19 @@
                 <div class="card">
                     <h3>🏆 Top performer</h3>
                     <div class="metric">
-                        <span>Meilleur vendeur</span>
+                        <span class="metric-label">Meilleur vendeur</span>
                         <span class="metric-value positive" id="top-vendeur">-</span>
                     </div>
                     <div class="metric">
-                        <span>Taux de transformation</span>
+                        <span class="metric-label">Taux de transformation</span>
                         <span class="metric-value positive" id="top-taux">0%</span>
                     </div>
                     <div class="metric">
-                        <span>CA généré</span>
+                        <span class="metric-label">CA généré</span>
                         <span class="metric-value positive" id="top-ca">0 €</span>
                     </div>
                     <div class="metric">
-                        <span>Primes gagnées</span>
+                        <span class="metric-label">Primes gagnées</span>
                         <span class="metric-value positive" id="top-primes">0 €</span>
                     </div>
                 </div>
@@ -439,7 +740,7 @@
                     </div>
                 </div>
 
-                <div class="card">
+                <div class="card" style="grid-column: 1 / -1;">
                     <h3>🎯 Performance vs Objectifs</h3>
                     <div class="chart-container" id="chart-objectifs">
                         <!-- Chart will be generated by JS -->
@@ -468,16 +769,16 @@
                 <div class="card prediction-card">
                     <h3>🤖 Prédictions IA <span class="ai-indicator">IA</span></h3>
                     <div class="metric">
-                        <span>CA prévu fin de mois</span>
-                        <span class="metric-value" id="prediction-ca" style="color: white;">0 €</span>
+                        <span style="color: white;">CA prévu fin de mois</span>
+                        <span class="metric-value" id="prediction-ca" style="background: rgba(255,255,255,0.2); color: white;">0 €</span>
                     </div>
                     <div class="metric">
-                        <span>Probabilité atteinte objectif</span>
-                        <span class="metric-value" id="prediction-probabilite" style="color: white;">0%</span>
+                        <span style="color: white;">Probabilité atteinte objectif</span>
+                        <span class="metric-value" id="prediction-probabilite" style="background: rgba(255,255,255,0.2); color: white;">0%</span>
                     </div>
                     <div class="metric">
-                        <span>Tendance générale</span>
-                        <span class="metric-value" id="prediction-tendance" style="color: white;">-</span>
+                        <span style="color: white;">Tendance générale</span>
+                        <span class="metric-value" id="prediction-tendance" style="background: rgba(255,255,255,0.2); color: white;">-</span>
                     </div>
                 </div>
 
@@ -491,15 +792,15 @@
                 <div class="card">
                     <h3>🎯 Vendeur à coacher prioritairement</h3>
                     <div class="metric">
-                        <span>Vendeur identifié</span>
+                        <span class="metric-label">Vendeur identifié</span>
                         <span class="metric-value negative" id="vendeur-coaching">-</span>
                     </div>
                     <div class="metric">
-                        <span>Raison principale</span>
+                        <span class="metric-label">Raison principale</span>
                         <span class="metric-value neutral" id="raison-coaching">-</span>
                     </div>
                     <div class="metric">
-                        <span>Action suggérée</span>
+                        <span class="metric-label">Action suggérée</span>
                         <span class="metric-value neutral" id="action-coaching">-</span>
                     </div>
                 </div>
@@ -653,6 +954,17 @@
         </div>
     </div>
 
+    <!-- Floating stats widget -->
+    <div class="floating-stats" id="floating-stats">
+        <div style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">Performance temps réel</div>
+        <div style="font-weight: bold; color: #667eea;" id="floating-perf">Chargement...</div>
+    </div>
+
+    <!-- Notification system -->
+    <div class="notification" id="notification">
+        <span id="notification-text"></span>
+    </div>
+
     <script>
         // Données des vendeurs avec vrais noms et marges
         let vendeursData = {
@@ -663,7 +975,7 @@
             'Nathan': { prospects: 10, devis: 7, ventes: 4, ca: 65000, type: 'Mixte', objectif: 85000, marge: 2050 }
         };
 
-        // Configuration des paliers de primes (global pour tous les vendeurs pour l'exemple)
+        // Configuration des paliers de primes
         let paliersGlobaux = [
             { seuil: 0, prime: 0 },
             { seuil: 80000, prime: 200 },
@@ -674,6 +986,20 @@
 
         // Marge minimum requise
         const MARGE_MINIMUM = 2000;
+
+        // Notification system
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const text = document.getElementById('notification-text');
+            
+            text.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
 
         function showTab(tabName) {
             // Cacher tous les contenus
@@ -689,17 +1015,25 @@
             event.target.classList.add('active');
             
             // Mettre à jour les données selon le tab
-            if (tabName === 'vue-ensemble') {
-                updateVueEnsemble();
-            } else if (tabName === 'vendeurs') {
-                updateVendeurs();
-            } else if (tabName === 'objectifs') {
-                updateObjectifs();
-            } else if (tabName === 'predictions') {
-                updatePredictions();
-            } else if (tabName === 'tunnel') {
-                updateTunnel();
-            }
+            setTimeout(() => {
+                switch(tabName) {
+                    case 'vue-ensemble':
+                        updateVueEnsemble();
+                        break;
+                    case 'vendeurs':
+                        updateVendeurs();
+                        break;
+                    case 'objectifs':
+                        updateObjectifs();
+                        break;
+                    case 'predictions':
+                        updatePredictions();
+                        break;
+                    case 'tunnel':
+                        updateTunnel();
+                        break;
+                }
+            }, 100);
         }
 
         function calculerPrime(ca) {
@@ -711,6 +1045,32 @@
                 }
             }
             return primeTotal;
+        }
+
+        function updateTicker() {
+            let totalCA = 0, totalVentes = 0, totalProspects = 0, totalObjectif = 0;
+            
+            for (let vendeur in vendeursData) {
+                const data = vendeursData[vendeur];
+                totalCA += data.ca;
+                totalVentes += data.ventes;
+                totalProspects += data.prospects;
+                totalObjectif += data.objectif;
+            }
+            
+            const tauxGlobal = totalProspects > 0 ? (totalVentes / totalProspects * 100) : 0;
+            const progressObjectif = totalObjectif > 0 ? (totalCA / totalObjectif * 100) : 0;
+            
+            document.getElementById('ticker-ca').textContent = totalCA.toLocaleString() + '€';
+            document.getElementById('ticker-ventes').textContent = totalVentes;
+            document.getElementById('ticker-taux').textContent = tauxGlobal.toFixed(1) + '%';
+            document.getElementById('ticker-objectif').textContent = progressObjectif.toFixed(1) + '%';
+            
+            // Floating stats
+            const floatingStats = document.getElementById('floating-perf');
+            if (floatingStats) {
+                floatingStats.innerHTML = `CA: ${totalCA.toLocaleString()}€<br>Progression: ${progressObjectif.toFixed(1)}%`;
+            }
         }
 
         function updateVueEnsemble() {
@@ -725,7 +1085,7 @@
                 totalVentes += data.ventes;
                 totalCA += data.ca;
                 totalObjectif += data.objectif;
-                totalMarge += data.marge * data.ventes; // Marge totale pondérée par nombre de ventes
+                totalMarge += data.marge * data.ventes;
 
                 const taux = data.prospects > 0 ? (data.ventes / data.prospects * 100) : 0;
                 const primes = calculerPrime(data.ca);
@@ -737,7 +1097,6 @@
                     bestPrimes = primes;
                 }
 
-                // Vérification marge
                 if (data.marge < MARGE_MINIMUM) {
                     vendeursEnAlerteMarge.push({
                         nom: vendeur,
@@ -749,9 +1108,10 @@
 
             const tauxGlobal = totalProspects > 0 ? (totalVentes / totalProspects * 100) : 0;
             const ecartCA = totalCA - totalObjectif;
-            const progressCA = Math.min(100, (totalCA / totalObjectif) * 100);
+            const progressCA = Math.min(100, totalObjectif > 0 ? (totalCA / totalObjectif) * 100 : 0);
             const margeMoyenne = totalVentes > 0 ? totalMarge / totalVentes : 0;
 
+            // Mise à jour des éléments
             document.getElementById('total-prospects').textContent = totalProspects;
             document.getElementById('total-devis').textContent = totalDevis;
             document.getElementById('total-ventes').textContent = totalVentes;
@@ -765,18 +1125,20 @@
             document.getElementById('objectif-ca-total').textContent = totalObjectif.toLocaleString() + ' €';
             document.getElementById('ecart-ca').textContent = (ecartCA >= 0 ? '+' : '') + ecartCA.toLocaleString() + ' €';
             document.getElementById('ecart-ca').className = 'metric-value ' + (ecartCA >= 0 ? 'positive' : 'negative');
-            document.getElementById('progress-ca').style.width = progressCA + '%';
+            
+            // Animation pour la barre de progression
+            setTimeout(() => {
+                document.getElementById('progress-ca').style.width = progressCA + '%';
+            }, 300);
 
             document.getElementById('top-vendeur').textContent = bestVendeur;
             document.getElementById('top-taux').textContent = bestTaux.toFixed(1) + '%';
             document.getElementById('top-ca').textContent = bestCA.toLocaleString() + ' €';
             document.getElementById('top-primes').textContent = bestPrimes.toLocaleString() + ' €';
 
-            // Mise à jour des alertes marges
             updateAlertesMarges(vendeursEnAlerteMarge);
-
-            // Mise à jour du graphique objectifs
             updateChart();
+            updateTicker();
         }
 
         function updateAlertesMarges(vendeursEnAlerte) {
@@ -797,10 +1159,10 @@
                 
                 vendeursEnAlerte.forEach(vendeur => {
                     alertesHTML += `
-                        <div class="alert alert-warning" style="margin: 5px 0; padding: 10px;">
+                        <div class="alert alert-warning" style="margin: 8px 0; padding: 12px;">
                             <strong>${vendeur.nom}</strong> : ${vendeur.marge.toLocaleString()}€ 
-                            (${vendeur.ecart.toLocaleString()}€ sous le minimum)
-                            <br><small>💡 Action requise : revoir stratégie tarifaire ou négociation</small>
+                            (-${vendeur.ecart.toLocaleString()}€)
+                            <br><small>💡 Action : revoir stratégie tarifaire</small>
                         </div>
                     `;
                 });
@@ -817,61 +1179,62 @@
                 const data = vendeursData[vendeur];
                 const taux = data.prospects > 0 ? (data.ventes / data.prospects * 100) : 0;
                 const tauxDevis = data.devis > 0 ? (data.ventes / data.devis * 100) : 0;
-                const progressObjectif = (data.ca / data.objectif) * 100;
+                const progressObjectif = data.objectif > 0 ? (data.ca / data.objectif) * 100 : 0;
                 const primes = calculerPrime(data.ca);
 
                 const card = document.createElement('div');
-                card.className = 'card vendeur-card';
+                card.className = 'card';
+                card.style.borderLeft = '4px solid #667eea';
                 card.innerHTML = `
                     <h3>👤 ${vendeur}</h3>
                     <div class="metric">
-                        <span>Prospects traités</span>
+                        <span class="metric-label">Prospects traités</span>
                         <span class="metric-value neutral">${data.prospects}</span>
                     </div>
                     <div class="metric">
-                        <span>Devis envoyés</span>
+                        <span class="metric-label">Devis envoyés</span>
                         <span class="metric-value neutral">${data.devis}</span>
                     </div>
                     <div class="metric">
-                        <span>Ventes réalisées</span>
+                        <span class="metric-label">Ventes réalisées</span>
                         <span class="metric-value positive">${data.ventes}</span>
                     </div>
                     <div class="metric">
-                        <span>Taux transformation</span>
+                        <span class="metric-label">Taux transformation</span>
                         <span class="metric-value ${taux >= 25 ? 'positive' : taux >= 20 ? 'neutral' : 'negative'}">${taux.toFixed(1)}%</span>
                     </div>
                     <div class="metric">
-                        <span>Taux devis → vente</span>
+                        <span class="metric-label">Taux devis → vente</span>
                         <span class="metric-value ${tauxDevis >= 60 ? 'positive' : tauxDevis >= 45 ? 'neutral' : 'negative'}">${tauxDevis.toFixed(1)}%</span>
                     </div>
                     <div class="metric">
-                        <span>CA généré</span>
+                        <span class="metric-label">CA généré</span>
                         <span class="metric-value positive">${data.ca.toLocaleString()} €</span>
                     </div>
                     <div class="metric">
-                        <span>Objectif mensuel</span>
+                        <span class="metric-label">Objectif mensuel</span>
                         <span class="metric-value neutral">${data.objectif.toLocaleString()} €</span>
                     </div>
                     <div class="metric">
-                        <span>Progression objectif</span>
+                        <span class="metric-label">Progression objectif</span>
                         <span class="metric-value ${progressObjectif >= 100 ? 'positive' : progressObjectif >= 80 ? 'neutral' : 'negative'}">${progressObjectif.toFixed(1)}%</span>
                     </div>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: ${Math.min(100, progressObjectif)}%"></div>
                     </div>
                     <div class="metric">
-                        <span>Primes gagnées</span>
+                        <span class="metric-label">Primes gagnées</span>
                         <span class="metric-value positive">${primes.toLocaleString()} €</span>
                     </div>
                     <div class="metric">
-                        <span>Marge moyenne par vente</span>
+                        <span class="metric-label">Marge moyenne par vente</span>
                         <span class="metric-value ${data.marge >= MARGE_MINIMUM ? 'positive' : 'negative'}">${data.marge.toLocaleString()} €</span>
                     </div>
                     <div class="metric">
-                        <span>Type principal</span>
+                        <span class="metric-label">Type principal</span>
                         <span class="metric-value neutral">${data.type}</span>
                     </div>
-                    ${data.marge < MARGE_MINIMUM ? `<div class="alert alert-warning" style="margin-top: 10px;"><strong>⚠️ Marge insuffisante :</strong> ${MARGE_MINIMUM - data.marge}€ en dessous du minimum requis (${MARGE_MINIMUM.toLocaleString()}€)</div>` : ''}
+                    ${data.marge < MARGE_MINIMUM ? `<div class="alert alert-warning" style="margin-top: 10px;"><strong>⚠️ Marge insuffisante :</strong> ${MARGE_MINIMUM - data.marge}€ en dessous du minimum requis</div>` : ''}
                 `;
                 grid.appendChild(card);
             }
@@ -883,7 +1246,7 @@
 
             for (let vendeur in vendeursData) {
                 const data = vendeursData[vendeur];
-                const progressObjectif = (data.ca / data.objectif) * 100;
+                const progressObjectif = data.objectif > 0 ? (data.ca / data.objectif) * 100 : 0;
                 const primes = calculerPrime(data.ca);
                 
                 const card = document.createElement('div');
@@ -891,26 +1254,26 @@
                 card.innerHTML = `
                     <h3>🎯 ${vendeur}</h3>
                     <div class="metric">
-                        <span>Objectif mensuel</span>
+                        <span class="metric-label">Objectif mensuel</span>
                         <span class="metric-value neutral">${data.objectif.toLocaleString()} €</span>
                     </div>
                     <div class="metric">
-                        <span>CA actuel</span>
+                        <span class="metric-label">CA actuel</span>
                         <span class="metric-value ${data.ca >= data.objectif ? 'positive' : 'neutral'}">${data.ca.toLocaleString()} €</span>
                     </div>
                     <div class="metric">
-                        <span>Progression</span>
+                        <span class="metric-label">Progression</span>
                         <span class="metric-value ${progressObjectif >= 100 ? 'positive' : progressObjectif >= 80 ? 'neutral' : 'negative'}">${progressObjectif.toFixed(1)}%</span>
                     </div>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: ${Math.min(100, progressObjectif)}%"></div>
                     </div>
                     <div class="metric">
-                        <span>Primes actuelles</span>
+                        <span class="metric-label">Primes actuelles</span>
                         <span class="metric-value positive">${primes.toLocaleString()} €</span>
                     </div>
-                    <div class="paliers-container">
-                        <h4>Paliers de primes :</h4>
+                    <div style="background: rgba(102, 126, 234, 0.05); border-radius: 10px; padding: 15px; margin-top: 15px;">
+                        <h4 style="margin-bottom: 10px; color: #4a5568;">Paliers de primes :</h4>
                         ${generatePaliersHTML(data.ca)}
                     </div>
                 `;
@@ -924,9 +1287,9 @@
                 const isAtteint = caActuel >= palier.seuil;
                 const statusIcon = isAtteint ? '✅' : '⏳';
                 html += `
-                    <div class="palier-item" style="${isAtteint ? 'background: rgba(72, 187, 120, 0.1);' : ''}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; ${isAtteint ? 'background: rgba(72, 187, 120, 0.1); border-radius: 6px; padding-left: 10px; padding-right: 10px;' : ''}">
                         <span>${statusIcon} ${palier.seuil.toLocaleString()} € et +</span>
-                        <span class="prime-badge" style="${isAtteint ? 'background: #48bb78;' : 'background: #cbd5e0; color: #4a5568;'}">${palier.prime} €</span>
+                        <span style="background: ${isAtteint ? '#48bb78' : '#cbd5e0'}; color: ${isAtteint ? 'white' : '#4a5568'}; padding: 4px 12px; border-radius: 15px; font-weight: bold; font-size: 0.9em;">${palier.prime} €</span>
                     </div>
                 `;
             });
@@ -934,30 +1297,25 @@
         }
 
         function updatePredictions() {
-            // Calculs prédictifs basés sur les données actuelles
-            let totalCA = 0;
-            let totalObjectif = 0;
-            let tendances = [];
+            let totalCA = 0, totalObjectif = 0, tendances = [];
 
             for (let vendeur in vendeursData) {
                 const data = vendeursData[vendeur];
                 totalCA += data.ca;
                 totalObjectif += data.objectif;
                 
-                // Calcul tendance individuelle
-                const progressJour = data.ca / 20; // Simulation : on est au 20e jour du mois
+                const progressJour = data.ca / 20;
                 const projectionFinMois = progressJour * 30;
                 tendances.push({
                     vendeur: vendeur,
                     projection: projectionFinMois,
                     objectif: data.objectif,
-                    performance: projectionFinMois / data.objectif
+                    performance: data.objectif > 0 ? projectionFinMois / data.objectif : 0
                 });
             }
 
-            // Prédiction globale
-            const progressMoyen = totalCA / totalObjectif;
-            const projectionGlobale = (totalCA / 20) * 30; // Simulation
+            const progressMoyen = totalObjectif > 0 ? totalCA / totalObjectif : 0;
+            const projectionGlobale = (totalCA / 20) * 30;
             const probabiliteSucces = Math.min(95, progressMoyen * 100);
 
             document.getElementById('prediction-ca').textContent = Math.round(projectionGlobale).toLocaleString() + ' €';
@@ -967,10 +1325,8 @@
                                probabiliteSucces >= 60 ? '📊 Bonne' : '📉 À surveiller';
             document.getElementById('prediction-tendance').textContent = tendanceText;
 
-            // Recommandations IA
             updateRecommendationsIA(tendances);
 
-            // Identification du vendeur à coacher
             const vendeurEnDifficulte = tendances.reduce((min, vendeur) => 
                 vendeur.performance < min.performance ? vendeur : min
             );
@@ -993,17 +1349,16 @@
             const container = document.getElementById('recommendations-ia');
             let recommendations = [];
 
-            // Analyse des tendances pour générer des recommandations
             const performancesMoyennes = tendances.reduce((acc, v) => acc + v.performance, 0) / tendances.length;
             
             if (performancesMoyennes < 0.8) {
-                recommendations.push('🎯 Organiser une session de coaching collectif sur les techniques de closing');
+                recommendations.push('🎯 Session de coaching collectif sur les techniques de closing');
                 recommendations.push('📞 Intensifier le suivi des devis en cours');
             }
             
             const vendeurTop = tendances.reduce((max, v) => v.performance > max.performance ? v : max);
             if (vendeurTop.performance > 1.2) {
-                recommendations.push(`🌟 Demander à ${vendeurTop.vendeur} de partager ses bonnes pratiques en équipe`);
+                recommendations.push(`🌟 Demander à ${vendeurTop.vendeur} de partager ses bonnes pratiques`);
             }
 
             const vendeursEnRetard = tendances.filter(v => v.performance < 0.7).length;
@@ -1011,18 +1366,17 @@
                 recommendations.push('⚠️ Revoir les objectifs individuels - plusieurs vendeurs en difficulté');
             }
 
-            // Recommandations spécifiques aux marges
             const vendeursMargesFaibles = Object.entries(vendeursData).filter(([nom, data]) => data.marge < MARGE_MINIMUM);
             if (vendeursMargesFaibles.length > 0) {
-                recommendations.push(`💰 Formation négociation tarifaire pour ${vendeursMargesFaibles.length} vendeur(s) avec marges insuffisantes`);
-                recommendations.push('📋 Revoir la grille tarifaire et argumentaire valeur produit');
+                recommendations.push(`💰 Formation négociation tarifaire pour ${vendeursMargesFaibles.length} vendeur(s)`);
+                recommendations.push('📋 Revoir la grille tarifaire et argumentaire valeur');
             }
 
-            recommendations.push('💡 Focus sur la qualification prospects pour améliorer taux transformation');
+            recommendations.push('💡 Focus qualification prospects pour améliorer taux transformation');
             recommendations.push('📈 Augmenter fréquence relance devis (J+3, J+7, J+14)');
 
             container.innerHTML = recommendations.map(rec => `
-                <div class="alert alert-info" style="margin: 8px 0; padding: 12px;">
+                <div class="alert alert-info" style="margin: 10px 0; padding: 15px; border-left: 4px solid var(--info-color);">
                     ${rec}
                 </div>
             `).join('');
@@ -1040,34 +1394,33 @@
 
             const tauxProspectDevis = totalProspects > 0 ? (totalDevis / totalProspects * 100) : 0;
             const tauxDevisVente = totalDevis > 0 ? (totalVentes / totalDevis * 100) : 0;
-            const tauxGlobal = totalProspects > 0 ? (totalVentes / totalProspects * 100) : 0;
 
             const chart = document.getElementById('tunnel-chart');
             chart.innerHTML = `
                 <div class="bar-group">
-                    <div class="bar" style="height: ${Math.max(20, Math.min(250, totalProspects * 3))}px; background: linear-gradient(to top, #4299e1, #3182ce);">
+                    <div class="bar" style="height: ${Math.max(25, Math.min(250, totalProspects * 3))}px; background: linear-gradient(to top, #4299e1, #3182ce);">
                         <div class="bar-value">${totalProspects}</div>
                     </div>
                     <div class="bar-label">Prospects</div>
                 </div>
-                <div style="display: flex; align-items: center; margin: 0 10px;">
-                    <div style="color: #4a5568; font-weight: bold; font-size: 0.9em;">${tauxProspectDevis.toFixed(1)}%</div>
-                    <div style="width: 30px; height: 2px; background: #cbd5e0; margin: 0 5px;"></div>
-                    <div style="font-size: 1.5em;">➡️</div>
+                <div style="display: flex; align-items: center; margin: 0 15px; flex-direction: column;">
+                    <div style="color: #4a5568; font-weight: bold; font-size: 1rem; margin-bottom: 5px;">${tauxProspectDevis.toFixed(1)}%</div>
+                    <div style="width: 40px; height: 3px; background: linear-gradient(45deg, #cbd5e0, #a0aec0); border-radius: 2px;"></div>
+                    <div style="font-size: 1.8em; margin-top: 5px;">➡️</div>
                 </div>
                 <div class="bar-group">
-                    <div class="bar" style="height: ${Math.max(20, Math.min(250, totalDevis * 5))}px; background: linear-gradient(to top, #ed8936, #dd6b20);">
+                    <div class="bar" style="height: ${Math.max(25, Math.min(250, totalDevis * 5))}px; background: linear-gradient(to top, #ed8936, #dd6b20);">
                         <div class="bar-value">${totalDevis}</div>
                     </div>
                     <div class="bar-label">Devis</div>
                 </div>
-                <div style="display: flex; align-items: center; margin: 0 10px;">
-                    <div style="color: #4a5568; font-weight: bold; font-size: 0.9em;">${tauxDevisVente.toFixed(1)}%</div>
-                    <div style="width: 30px; height: 2px; background: #cbd5e0; margin: 0 5px;"></div>
-                    <div style="font-size: 1.5em;">➡️</div>
+                <div style="display: flex; align-items: center; margin: 0 15px; flex-direction: column;">
+                    <div style="color: #4a5568; font-weight: bold; font-size: 1rem; margin-bottom: 5px;">${tauxDevisVente.toFixed(1)}%</div>
+                    <div style="width: 40px; height: 3px; background: linear-gradient(45deg, #cbd5e0, #a0aec0); border-radius: 2px;"></div>
+                    <div style="font-size: 1.8em; margin-top: 5px;">➡️</div>
                 </div>
                 <div class="bar-group">
-                    <div class="bar" style="height: ${Math.max(20, Math.min(250, totalVentes * 8))}px; background: linear-gradient(to top, #48bb78, #38a169);">
+                    <div class="bar" style="height: ${Math.max(25, Math.min(250, totalVentes * 8))}px; background: linear-gradient(to top, #48bb78, #38a169);">
                         <div class="bar-value">${totalVentes}</div>
                     </div>
                     <div class="bar-label">Ventes</div>
@@ -1093,33 +1446,53 @@
             const chart = document.getElementById('chart-objectifs');
             const vendeurs = Object.keys(vendeursData);
 
-            let chartHTML = '<div style="display: flex; align-items: end; height: 100%; justify-content: space-around; overflow-x: auto; min-width: 100%;">';
+            let chartHTML = '<div style="display: flex; align-items: end; height: 100%; justify-content: space-around; overflow-x: auto; min-width: 100%; padding: 10px;">';
+            
+            const maxObjectif = Math.max(...Object.values(vendeursData).map(v => v.objectif));
+            
             vendeurs.forEach(vendeur => {
                 const data = vendeursData[vendeur];
                 const maxHeight = 200;
-                const maxObjectif = Math.max(...Object.values(vendeursData).map(v => v.objectif));
                 
-                const heightObjectif = Math.max(20, (data.objectif / maxObjectif) * maxHeight);
-                const heightCA = Math.max(20, (data.ca / maxObjectif) * maxHeight);
+                const heightObjectif = Math.max(25, (data.objectif / maxObjectif) * maxHeight);
+                const heightCA = Math.max(25, (data.ca / maxObjectif) * maxHeight);
                 
-                const colorCA = data.ca >= data.objectif ? '#48bb78' : 
-                              data.ca >= data.objectif * 0.8 ? '#ed8936' : '#e53e3e';
+                const colorCA = data.ca >= data.objectif ? 'linear-gradient(to top, #48bb78, #38a169)' : 
+                              data.ca >= data.objectif * 0.8 ? 'linear-gradient(to top, #ed8936, #dd6b20)' : 'linear-gradient(to top, #e53e3e, #c53030)';
                 
                 chartHTML += `
-                    <div class="bar-group">
-                        <div style="display: flex; align-items: end;">
-                            <div class="bar" style="height: ${heightObjectif}px; background: #cbd5e0; width: 25px; margin-right: 5px;">
-                                <div class="bar-value" style="color: #4a5568;">${(data.objectif/1000).toFixed(0)}k€</div>
+                    <div class="bar-group" style="margin: 0 10px;">
+                        <div style="display: flex; align-items: end; gap: 8px;">
+                            <div class="bar" style="height: ${heightObjectif}px; background: linear-gradient(to top, #cbd5e0, #a0aec0); width: 28px; position: relative;">
+                                <div class="bar-value" style="color: #4a5568; font-size: 0.8em;">${(data.objectif/1000).toFixed(0)}k€</div>
                             </div>
-                            <div class="bar" style="height: ${heightCA}px; background: ${colorCA}; width: 25px;">
-                                <div class="bar-value">${(data.ca/1000).toFixed(0)}k€</div>
+                            <div class="bar" style="height: ${heightCA}px; background: ${colorCA}; width: 28px; position: relative;">
+                                <div class="bar-value" style="font-size: 0.8em;">${(data.ca/1000).toFixed(0)}k€</div>
                             </div>
                         </div>
-                        <div class="bar-label">${vendeur}</div>
+                        <div class="bar-label" style="margin-top: 15px; font-size: 0.9em; font-weight: 700;">${vendeur}</div>
+                        <div style="font-size: 0.75em; color: #666; margin-top: 2px;">
+                            ${((data.ca / data.objectif) * 100).toFixed(1)}%
+                        </div>
                     </div>
                 `;
             });
             chartHTML += '</div>';
+            
+            // Légende
+            chartHTML += `
+                <div style="display: flex; justify-content: center; gap: 20px; margin-top: 15px; font-size: 0.85em;">
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <div style="width: 15px; height: 15px; background: linear-gradient(to top, #cbd5e0, #a0aec0); border-radius: 2px;"></div>
+                        <span>Objectif</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <div style="width: 15px; height: 15px; background: linear-gradient(to top, #48bb78, #38a169); border-radius: 2px;"></div>
+                        <span>CA Réalisé</span>
+                    </div>
+                </div>
+            `;
+            
             chart.innerHTML = chartHTML;
         }
 
@@ -1132,8 +1505,10 @@
                 vendeursData[vendeur].objectif = objectif;
                 document.getElementById('admin-objectif-input').value = '';
                 
-                showSuccessMessage('Objectif défini avec succès pour ' + vendeur + ' !');
+                showNotification(`Objectif défini avec succès pour ${vendeur} : ${objectif.toLocaleString()}€`);
                 updateVueEnsemble();
+            } else {
+                showNotification('Veuillez saisir un objectif valide', 'warning');
             }
         }
 
@@ -1142,7 +1517,6 @@
             const prime = parseInt(document.getElementById('admin-prime-input').value) || 0;
             
             if (seuil > 0 && prime >= 0) {
-                // Ajouter ou mettre à jour le palier
                 const existingIndex = paliersGlobaux.findIndex(p => p.seuil === seuil);
                 if (existingIndex >= 0) {
                     paliersGlobaux[existingIndex].prime = prime;
@@ -1150,14 +1524,15 @@
                     paliersGlobaux.push({ seuil: seuil, prime: prime });
                 }
                 
-                // Trier les paliers par seuil
                 paliersGlobaux.sort((a, b) => a.seuil - b.seuil);
                 
                 document.getElementById('admin-seuil-input').value = '';
                 document.getElementById('admin-prime-input').value = '';
                 
                 showPaliersPreview();
-                showSuccessMessage('Palier ajouté avec succès !');
+                showNotification(`Palier ajouté : ${seuil.toLocaleString()}€ → ${prime}€`);
+            } else {
+                showNotification('Veuillez saisir des valeurs valides', 'warning');
             }
         }
 
@@ -1166,9 +1541,9 @@
             const list = document.getElementById('paliers-list');
             
             list.innerHTML = paliersGlobaux.map(palier => `
-                <div class="palier-item">
-                    <span>${palier.seuil.toLocaleString()} € et +</span>
-                    <span class="prime-badge">${palier.prime} €</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #e2e8f0;">
+                    <span style="font-weight: 600;">${palier.seuil.toLocaleString()} € et +</span>
+                    <span style="background: linear-gradient(45deg, #48bb78, #38a169); color: white; padding: 6px 15px; border-radius: 20px; font-weight: bold;">${palier.prime} €</span>
                 </div>
             `).join('');
             
@@ -1185,7 +1560,7 @@
                     { seuil: 110000, prime: 750 }
                 ];
                 showPaliersPreview();
-                showSuccessMessage('Paliers réinitialisés !');
+                showNotification('Paliers réinitialisés aux valeurs par défaut');
             }
         }
 
@@ -1198,7 +1573,23 @@
             const marge = parseInt(document.getElementById('marge-input').value) || 0;
             const type = document.getElementById('type-poele').value;
 
-            // Mise à jour des données (additive pour la plupart, moyenne pondérée pour la marge)
+            if (prospects === 0 && devis === 0 && ventes === 0 && ca === 0) {
+                showNotification('Veuillez saisir au moins une donnée', 'warning');
+                return;
+            }
+
+            // Validation cohérence des données
+            if (ventes > devis && devis > 0) {
+                showNotification('Le nombre de ventes ne peut pas être supérieur au nombre de devis', 'warning');
+                return;
+            }
+
+            if (devis > prospects && prospects > 0) {
+                showNotification('Le nombre de devis ne peut pas être supérieur au nombre de prospects', 'warning');
+                return;
+            }
+
+            // Mise à jour des données
             const ventesActuelles = vendeursData[vendeur].ventes;
             const margeActuelle = vendeursData[vendeur].marge;
             
@@ -1218,43 +1609,43 @@
             }
 
             // Réinitialiser les champs
-            document.getElementById('prospects-input').value = '';
-            document.getElementById('devis-input').value = '';
-            document.getElementById('ventes-input').value = '';
-            document.getElementById('ca-input').value = '';
-            document.getElementById('marge-input').value = '';
+            ['prospects-input', 'devis-input', 'ventes-input', 'ca-input', 'marge-input'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
 
-            showSuccessMessage('Données enregistrées avec succès !');
+            showNotification(`Données enregistrées pour ${vendeur} !`);
             updateVueEnsemble();
-        }
-
-        function showSuccessMessage(message) {
-            const successMsg = document.getElementById('success-message');
-            successMsg.textContent = '✅ ' + message;
-            successMsg.style.display = 'block';
+            
+            // Animation du bouton
+            const btn = event.target;
+            btn.innerHTML = '<span class="loading-spinner"></span> Enregistrement...';
+            btn.disabled = true;
+            
             setTimeout(() => {
-                successMsg.style.display = 'none';
-            }, 3000);
+                btn.innerHTML = '💾 Enregistrer les données';
+                btn.disabled = false;
+            }, 1000);
         }
 
         function exporterDonnees() {
             const dataToExport = {
                 vendeurs: vendeursData,
                 paliers: paliersGlobaux,
-                dateExport: new Date().toISOString()
+                dateExport: new Date().toISOString(),
+                version: "2.0"
             };
             
             const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'dashboard-commercial-' + new Date().toISOString().split('T')[0] + '.json';
+            a.download = `dashboard-commercial-${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            showSuccessMessage('Données exportées avec succès !');
+            showNotification('Données exportées avec succès !');
         }
 
         function reinitialiserDonnees() {
@@ -1267,7 +1658,37 @@
                     'Nathan': { prospects: 0, devis: 0, ventes: 0, ca: 0, type: 'Mixte', objectif: 85000, marge: 2000 }
                 };
                 updateVueEnsemble();
-                showSuccessMessage('Toutes les données ont été réinitialisées !');
+                showNotification('⚠️ Toutes les données ont été réinitialisées !', 'warning');
+            }
+        }
+
+        // Animation d'entrée pour les cartes
+        function animateCards() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        }
+
+        // Auto-update des données toutes les 30 secondes (simulation temps réel)
+        function autoUpdate() {
+            // Simulation de micro-variations dans les données pour effet temps réel
+            const vendeurs = Object.keys(vendeursData);
+            const randomVendeur = vendeurs[Math.floor(Math.random() * vendeurs.length)];
+            
+            // Petites variations aléatoires très occasionnelles
+            if (Math.random() < 0.1) { // 10% de chance
+                const variation = Math.floor(Math.random() * 3) - 1; // -1, 0, ou +1
+                if (variation !== 0) {
+                    vendeursData[randomVendeur].prospects += Math.max(0, variation);
+                    updateTicker();
+                }
             }
         }
 
@@ -1275,7 +1696,116 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateVueEnsemble();
             showPaliersPreview();
+            animateCards();
+            
+            // Démarrer les auto-updates
+            setInterval(autoUpdate, 30000); // Toutes les 30 secondes
+            
+            // Message de bienvenue
+            setTimeout(() => {
+                showNotification('Dashboard chargé avec succès ! 🚀');
+            }, 1000);
         });
+
+        // Gestion du redimensionnement de fenêtre
+        window.addEventListener('resize', function() {
+            // Re-dessiner les graphiques si nécessaire
+            if (document.getElementById('vue-ensemble').classList.contains('active')) {
+                updateChart();
+            }
+        });
+
+        // Gestion des raccourcis clavier
+        document.addEventListener('keydown', function(e) {
+            // Alt + 1-7 pour naviguer entre les tabs
+            if (e.altKey && e.key >= '1' && e.key <= '7') {
+                e.preventDefault();
+                const tabs = ['vue-ensemble', 'vendeurs', 'objectifs', 'predictions', 'tunnel', 'saisie', 'admin'];
+                const tabIndex = parseInt(e.key) - 1;
+                if (tabs[tabIndex]) {
+                    const tabButton = document.querySelector(`.tab:nth-child(${tabIndex + 1})`);
+                    if (tabButton) {
+                        tabButton.click();
+                    }
+                }
+            }
+        });
+
+        // Détection de l'inactivité pour économiser les ressources
+        let lastActivity = Date.now();
+        let isActive = true;
+
+        function resetActivity() {
+            lastActivity = Date.now();
+            isActive = true;
+        }
+
+        document.addEventListener('mousemove', resetActivity);
+        document.addEventListener('keydown', resetActivity);
+        document.addEventListener('click', resetActivity);
+
+        setInterval(() => {
+            if (Date.now() - lastActivity > 300000) { // 5 minutes d'inactivité
+                isActive = false;
+            }
+        }, 60000); // Vérification toutes les minutes
+
+        // Sauvegarde automatique dans localStorage
+        function saveToLocalStorage() {
+            try {
+                const dataToSave = {
+                    vendeurs: vendeursData,
+                    paliers: paliersGlobaux,
+                    lastSaved: Date.now()
+                };
+                localStorage.setItem('dashboardData', JSON.stringify(dataToSave));
+            } catch (e) {
+                console.warn('Impossible de sauvegarder dans localStorage:', e);
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const savedData = localStorage.getItem('dashboardData');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    if (data.vendeurs && data.paliers) {
+                        vendeursData = data.vendeurs;
+                        paliersGlobaux = data.paliers;
+                        
+                        // Message de récupération
+                        const lastSaved = new Date(data.lastSaved).toLocaleString();
+                        showNotification(`Données restaurées (${lastSaved})`, 'info');
+                    }
+                }
+            } catch (e) {
+                console.warn('Impossible de charger depuis localStorage:', e);
+            }
+        }
+
+        // Sauvegarder à chaque modification
+        const originalAjouterDonnees = ajouterDonnees;
+        const originalDefinirObjectif = definirObjectif;
+        const originalAjouterPalier = ajouterPalier;
+
+        function ajouterDonnees() {
+            originalAjouterDonnees();
+            saveToLocalStorage();
+        }
+
+        function definirObjectif() {
+            originalDefinirObjectif();
+            saveToLocalStorage();
+        }
+
+        function ajouterPalier() {
+            originalAjouterPalier();
+            saveToLocalStorage();
+        }
+
+        // Charger les données au démarrage
+        // loadFromLocalStorage(); // Décommenté si vous voulez la persistance
     </script>
 </body>
 </html>
+                    
