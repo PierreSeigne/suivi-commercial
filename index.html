@@ -1,1291 +1,670 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Commercial Pro</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        h1 {
-            color: white;
-            font-size: 2.5rem;
-            font-weight: 300;
-        }
-
-        .month-selector {
-            display: flex;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 10px;
-            backdrop-filter: blur(10px);
-        }
-
-        .month-btn {
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-
-        .month-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: scale(1.1);
-        }
-
-        .current-month {
-            color: white;
-            font-size: 18px;
-            font-weight: 500;
-            margin: 0 20px;
-            min-width: 150px;
-            text-align: center;
-        }
-
-        .tabs {
-            display: flex;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 5px;
-            margin-bottom: 30px;
-            backdrop-filter: blur(10px);
-        }
-
-        .tab {
-            flex: 1;
-            padding: 15px;
-            text-align: center;
-            background: transparent;
-            border: none;
-            color: rgba(255, 255, 255, 0.7);
-            cursor: pointer;
-            border-radius: 10px;
-            transition: all 0.3s;
-            font-size: 16px;
-        }
-
-        .tab.active {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .overview-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .overview-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 25px;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .overview-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-        }
-
-        .overview-card h3 {
-            color: #4a5568;
-            font-size: 14px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .overview-card .value {
-            font-size: 2rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .overview-card .trend {
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .chart-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .chart {
-            display: flex;
-            align-items: end;
-            gap: 15px;
-            height: 200px;
-            padding: 20px 0;
-        }
-
-        .bar-group {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .bar {
-            width: 100%;
-            max-width: 60px;
-            background: linear-gradient(to top, #667eea, #764ba2);
-            border-radius: 4px 4px 0 0;
-            position: relative;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .bar:hover {
-            transform: scaleY(1.05);
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .bar-value {
-            position: absolute;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 12px;
-            font-weight: bold;
-            color: #4a5568;
-            white-space: nowrap;
-        }
-
-        .bar-label {
-            font-size: 12px;
-            color: #4a5568;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        .metric {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .metric:last-child {
-            border-bottom: none;
-        }
-
-        .metric-value {
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        .positive { color: #38a169; }
-        .negative { color: #e53e3e; }
-        .neutral { color: #4a5568; }
-
-        .progress-bar {
-            width: 100%;
-            height: 10px;
-            background: #e2e8f0;
-            border-radius: 5px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            border-radius: 5px;
-            transition: all 0.8s ease;
-            background: linear-gradient(45deg, #38a169, #48bb78);
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #4a5568;
-            font-weight: 500;
-        }
-
-        .input-group input, .input-group select {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        .input-group input:focus, .input-group select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .btn {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 14px 28px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            margin: 5px;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-warning {
-            background: linear-gradient(45deg, #ed8936, #dd6b20);
-            box-shadow: 0 4px 15px rgba(237, 137, 54, 0.3);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(45deg, #718096, #4a5568);
-            box-shadow: 0 4px 15px rgba(113, 128, 150, 0.3);
-        }
-
-        .alert {
-            padding: 20px;
-            border-radius: 10px;
-            margin: 15px 0;
-            border-left: 4px solid;
-        }
-
-        .alert-success {
-            background: linear-gradient(45deg, #c6f6d5, #9ae6b4);
-            color: #22543d;
-            border-color: #38a169;
-        }
-
-        .alert-warning {
-            background: linear-gradient(45deg, #fefcbf, #faf089);
-            color: #744210;
-            border-color: #ed8936;
-        }
-
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background: linear-gradient(45deg, #38a169, #48bb78);
-            color: white;
-            border-radius: 10px;
-            z-index: 1000;
-            transform: translateX(400px);
-            transition: transform 0.3s;
-            box-shadow: 0 8px 25px rgba(56, 161, 105, 0.3);
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification.warning {
-            background: linear-gradient(45deg, #ed8936, #dd6b20);
-            box-shadow: 0 8px 25px rgba(237, 137, 54, 0.3);
-        }
-
-        .comparison-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .stats-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .evolution-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 14px;
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-weight: 500;
-        }
-
-        .evolution-up {
-            background: #c6f6d5;
-            color: #22543d;
-        }
-
-        .evolution-down {
-            background: #fed7d7;
-            color: #742a2a;
-        }
-
-        .evolution-equal {
-            background: #e2e8f0;
-            color: #4a5568;
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 20px;
-            }
-            
-            .comparison-section {
-                grid-template-columns: 1fr;
-            }
-            
-            .overview-grid {
-                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            }
-            
-            .cards-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Commercial Pro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+    .container { max-width: 1400px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    h1 { color: white; font-size: 2.5rem; font-weight: 300; }
+    .month-selector { display: flex; align-items: center; background: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 10px; backdrop-filter: blur(10px); }
+    .month-btn { background: transparent; border: none; color: white; font-size: 24px; cursor: pointer; padding: 10px; border-radius: 8px; transition: all 0.3s; }
+    .month-btn:hover { background: rgba(255, 255, 255, 0.1); transform: scale(1.1); }
+    .current-month { color: white; font-size: 18px; font-weight: 500; margin: 0 20px; min-width: 150px; text-align: center; }
+    .tabs { display: flex; background: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 5px; margin-bottom: 30px; backdrop-filter: blur(10px); overflow-x: auto; }
+    .tab { flex: 1; padding: 15px; text-align: center; background: transparent; border: none; color: rgba(255,255,255,0.7); cursor: pointer; border-radius: 10px; transition: all 0.3s; font-size: 16px; white-space: nowrap; }
+    .tab.active { background: rgba(255, 255, 255, 0.2); color: white; transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .overview-card { background: rgba(255,255,255,0.95); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.1); backdrop-filter: blur(10px); position: relative; overflow: hidden; }
+    .overview-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(45deg, #667eea, #764ba2); }
+    .overview-card h3 { color: #4a5568; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+    .overview-card .value { font-size: 2rem; font-weight: bold; margin-bottom: 5px; }
+    .overview-card .trend { font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .card { background: rgba(255,255,255,0.95); border-radius: 15px; padding: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); backdrop-filter: blur(10px); transition: transform 0.3s; }
+    .card:hover { transform: translateY(-5px); }
+    .chart-container { background: rgba(255,255,255,0.95); border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+    .chart { display: flex; align-items: end; gap: 15px; height: 200px; padding: 20px 0; }
+    .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .bar { width: 100%; max-width: 60px; background: linear-gradient(to top, #667eea, #764ba2); border-radius: 4px 4px 0 0; position: relative; transition: all 0.3s; cursor: pointer; }
+    .bar:hover { transform: scaleY(1.05); box-shadow: 0 4px 20px rgba(102,126,234,0.3); }
+    .bar-value { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: bold; color: #4a5568; white-space: nowrap; }
+    .bar-label { font-size: 12px; color: #4a5568; text-align: center; font-weight: 500; }
+    .metric { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+    .metric:last-child { border-bottom: none; }
+    .metric-value { font-weight: bold; font-size: 1.1rem; }
+    .positive { color: #38a169; } .negative { color: #e53e3e; } .neutral { color: #4a5568; }
+    .progress-bar { width: 100%; height: 10px; background: #e2e8f0; border-radius: 5px; margin-top: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 5px; transition: all 0.8s ease; background: linear-gradient(45deg, #38a169, #48bb78); }
+    .input-group { margin-bottom: 20px; }
+    .input-group label { display: block; margin-bottom: 8px; color: #4a5568; font-weight: 500; }
+    .input-group input, .input-group select { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; }
+    .input-group input:focus, .input-group select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+    .btn { background: linear-gradient(45deg, #667eea, #764ba2); color: white; border: none; padding: 14px 28px; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 500; margin: 5px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102,126,234,0.3); }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102,126,234,0.4); }
+    .btn-warning { background: linear-gradient(45deg, #ed8936, #dd6b20); box-shadow: 0 4px 15px rgba(237,137,54,0.3); }
+    .btn-secondary { background: linear-gradient(45deg, #718096, #4a5568); box-shadow: 0 4px 15px rgba(113,128,150,0.3); }
+    .alert { padding: 20px; border-radius: 10px; margin: 15px 0; border-left: 4px solid; }
+    .alert-success { background: linear-gradient(45deg, #c6f6d5, #9ae6b4); color: #22543d; border-color: #38a169; }
+    .alert-warning { background: linear-gradient(45deg, #fefcbf, #faf089); color: #744210; border-color: #ed8936; }
+    .notification { position: fixed; top: 20px; right: 20px; padding: 15px 20px; background: linear-gradient(45deg, #38a169, #48bb78); color: white; border-radius: 10px; z-index: 1000; transform: translateX(400px); transition: transform 0.3s; box-shadow: 0 8px 25px rgba(56,161,105,0.3); }
+    .notification.show { transform: translateX(0); }
+    .notification.warning { background: linear-gradient(45deg, #ed8936, #dd6b20); box-shadow: 0 8px 25px rgba(237,137,54,0.3); }
+    .comparison-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+    .stats-card { background: rgba(255,255,255,0.95); border-radius: 15px; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+    .evolution-indicator { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; padding: 4px 8px; border-radius: 20px; font-weight: 500; }
+    .evolution-up { background: #c6f6d5; color: #22543d; }
+    .evolution-down { background: #fed7d7; color: #742a2a; }
+    .evolution-equal { background: #e2e8f0; color: #4a5568; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 10px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: #4a5568; }
+    tr:hover td { background: rgba(102,126,234,0.06); }
+    @media (max-width: 768px) {
+      .header { flex-direction: column; gap: 20px; }
+      .comparison-section { grid-template-columns: 1fr; }
+      .overview-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Dashboard Commercial - CVL</h1>
-            
-            <div class="month-selector">
-                <button class="month-btn" onclick="changerMois(-1)">‹</button>
-                <span class="current-month" id="current-month"></span>
-                <button class="month-btn" onclick="changerMois(1)">›</button>
-            </div>
-        </div>
-        
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('vue-ensemble')">📈 Vue d'ensemble</button>
-            <button class="tab" onclick="showTab('vendeurs')">👥 Vendeurs</button>
-            <button class="tab" onclick="showTab('vue-annuelle')">🗓️ Vue Annuelle</button>
-            <button class="tab" onclick="showTab('comparatif')">📊 Comparatif</button>
-            <button class="tab" onclick="showTab('saisie')">✏️ Saisie</button>
-        </div>
+<div class="container">
+  <div class="header">
+    <h1>📊 Dashboard Commercial - CVL</h1>
+    <div class="month-selector">
+      <button class="month-btn" onclick="changerMois(-1)">‹</button>
+      <span class="current-month" id="current-month"></span>
+      <button class="month-btn" onclick="changerMois(1)">›</button>
+    </div>
+  </div>
 
-        <!-- Vue d'ensemble -->
-        <div id="vue-ensemble" class="tab-content active">
-            <div class="overview-grid">
-                <div class="overview-card">
-                    <h3>Total Rendez-vous</h3>
-                    <div class="value neutral" id="total-prospects">0</div>
-                    <div class="trend" id="trend-prospects"></div>
-                </div>
-                <div class="overview-card">
-                    <h3>Total Ventes</h3>
-                    <div class="value positive" id="total-ventes">0</div>
-                    <div class="trend" id="trend-ventes"></div>
-                </div>
-                <div class="overview-card">
-                    <h3>Taux Global</h3>
-                    <div class="value" id="taux-global">0%</div>
-                    <div class="trend" id="trend-taux"></div>
-                </div>
-                <div class="overview-card">
-                    <h3>CA Réalisé</h3>
-                    <div class="value positive" id="ca-realise">0 €</div>
-                    <div class="trend" id="trend-ca"></div>
-                </div>
-                <div class="overview-card">
-                    <h3>Objectif Total</h3>
-                    <div class="value neutral" id="objectif-total">0 €</div>
-                </div>
-                <div class="overview-card">
-                    <h3>Progression</h3>
-                    <div class="value" id="progression-total">0%</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progress-ca" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab(event, 'vue-ensemble')">📈 Vue d'ensemble</button>
+    <button class="tab" onclick="showTab(event, 'vendeurs')">👥 Vendeurs</button>
+    <button class="tab" onclick="showTab(event, 'vue-annuelle')">🗓️ Vue Annuelle</button>
+    <button class="tab" onclick="showTab(event, 'comparatif')">📊 Comparatif</button>
+    <button class="tab" onclick="showTab(event, 'saisie')">✏️ Saisie</button>
+    <button class="tab" onclick="showTab(event, 'ia')">🤖 Prédiction IA</button>
+  </div>
 
-            <div class="chart-container">
-                <h3 style="margin-bottom: 20px;">📊 CA par vendeur</h3>
-                <div class="chart" id="chart-vendeurs"></div>
-            </div>
+  <!-- Vue d'ensemble -->
+  <div id="vue-ensemble" class="tab-content active">
+    <div class="overview-grid">
+      <div class="overview-card">
+        <h3>Total Rendez-vous</h3>
+        <div class="value neutral" id="total-prospects">0</div>
+        <div class="trend" id="trend-prospects"></div>
+      </div>
+      <div class="overview-card">
+        <h3>Total Ventes</h3>
+        <div class="value positive" id="total-ventes">0</div>
+        <div class="trend" id="trend-ventes"></div>
+      </div>
+      <div class="overview-card">
+        <h3>Taux Global</h3>
+        <div class="value" id="taux-global">0%</div>
+        <div class="trend" id="trend-taux"></div>
+      </div>
+      <div class="overview-card">
+        <h3>CA Réalisé</h3>
+        <div class="value positive" id="ca-realise">0 €</div>
+        <div class="trend" id="trend-ca"></div>
+      </div>
+      <div class="overview-card">
+        <h3>Objectif Total</h3>
+        <div class="value neutral" id="objectif-total">0 €</div>
+      </div>
+      <div class="overview-card">
+        <h3>Progression</h3>
+        <div class="value" id="progression-total">0%</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-ca" style="width: 0%"></div></div>
+      </div>
+    </div>
+    <div class="chart-container">
+      <h3 style="margin-bottom: 20px;">📊 CA par vendeur</h3>
+      <div class="chart" id="chart-vendeurs"></div>
+    </div>
+    <div class="card">
+      <h3>🏆 Meilleur Vendeur du Mois</h3>
+      <div class="metric"><span>Nom</span><span class="metric-value positive" id="top-vendeur">-</span></div>
+      <div class="metric"><span>CA</span><span class="metric-value positive" id="top-ca">0 €</span></div>
+      <div class="metric"><span>Taux de conversion</span><span class="metric-value positive" id="top-taux">0%</span></div>
+      <div class="metric"><span>Progression objectif</span><span class="metric-value positive" id="top-progression">0%</span></div>
+    </div>
+    <div id="alertes-marges"></div>
+  </div>
 
-            <div class="card">
-                <h3>🏆 Meilleur Vendeur du Mois</h3>
-                <div class="metric">
-                    <span>Nom</span>
-                    <span class="metric-value positive" id="top-vendeur">-</span>
-                </div>
-                <div class="metric">
-                    <span>CA</span>
-                    <span class="metric-value positive" id="top-ca">0 €</span>
-                </div>
-                <div class="metric">
-                    <span>Taux de conversion</span>
-                    <span class="metric-value positive" id="top-taux">0%</span>
-                </div>
-                <div class="metric">
-                    <span>Progression objectif</span>
-                    <span class="metric-value positive" id="top-progression">0%</span>
-                </div>
-            </div>
+  <!-- Vendeurs -->
+  <div id="vendeurs" class="tab-content"><div class="cards-grid" id="vendeurs-grid"></div></div>
 
-            <div id="alertes-marges"></div>
-        </div>
+  <!-- Vue Annuelle -->
+  <div id="vue-annuelle" class="tab-content">
+    <div class="overview-grid">
+      <div class="overview-card"><h3>CA Annuel</h3><div class="value positive" id="ca-annuel">0 €</div><div class="trend" id="trend-ca-annuel"></div></div>
+      <div class="overview-card"><h3>Objectif Annuel</h3><div class="value neutral" id="objectif-annuel">0 €</div></div>
+      <div class="overview-card"><h3>Progression</h3><div class="value" id="progression-annuelle">0%</div><div class="progress-bar"><div class="progress-fill" id="progress-annuel" style="width: 0%"></div></div></div>
+      <div class="overview-card"><h3>Ventes Totales</h3><div class="value positive" id="ventes-annuelles">0</div></div>
+      <div class="overview-card"><h3>Rendez-vous Totaux</h3><div class="value neutral" id="prospects-annuels">0</div></div>
+      <div class="overview-card"><h3>Taux Global Annuel</h3><div class="value" id="taux-annuel">0%</div></div>
+    </div>
+    <div class="chart-container">
+      <h3 style="margin-bottom: 20px;">📈 Évolution mensuelle du CA <span id="annee-actuelle-1"></span></h3>
+      <div class="chart" id="chart-annuel" style="height: 250px;"></div>
+    </div>
+    <div class="comparison-section">
+      <div class="stats-card"><h3>🏆 Classement annuel des vendeurs</h3><div id="classement-annuel"></div></div>
+      <div class="stats-card"><h3>📊 Statistiques par trimestre</h3><div id="stats-trimestrielles"></div></div>
+    </div>
+    <div class="cards-grid">
+      <div class="card"><h3>🎯 Performance annuelle par vendeur</h3><div id="performance-annuelle"></div></div>
+      <div class="card"><h3>📈 Meilleur/Pire mois de l'année</h3><div id="analyse-mois"></div></div>
+    </div>
+    <div class="chart-container">
+      <h3 style="margin-bottom: 20px;">📊 Répartition du CA par vendeur (<span id="annee-actuelle-2"></span>)</h3>
+      <div style="display:flex; justify-content:center; align-items:center; height:200px;">
+        <canvas id="chart-repartition" width="300" height="300"></canvas>
+      </div>
+    </div>
+  </div>
 
-        <!-- Vendeurs -->
-        <div id="vendeurs" class="tab-content">
-            <div class="cards-grid" id="vendeurs-grid"></div>
-        </div>
+  <!-- Comparatif -->
+  <div id="comparatif" class="tab-content">
+    <div class="comparison-section">
+      <div class="stats-card"><h3>📈 Évolution par rapport au mois précédent</h3><div id="evolution-content"></div></div>
+      <div class="stats-card"><h3>🎯 Performance vs Objectifs</h3><div id="performance-content"></div></div>
+    </div>
+    <div class="chart-container"><h3 style="margin-bottom: 20px;">📊 Évolution du CA sur 6 mois</h3><div class="chart" id="chart-evolution"></div></div>
+  </div>
 
-        <!-- Vue Annuelle -->
-        <div id="vue-annuelle" class="tab-content">
-            <div class="overview-grid">
-                <div class="overview-card">
-                    <h3>CA Annuel</h3>
-                    <div class="value positive" id="ca-annuel">0 €</div>
-                    <div class="trend" id="trend-ca-annuel"></div>
-                </div>
-                <div class="overview-card">
-                    <h3>Objectif Annuel</h3>
-                    <div class="value neutral" id="objectif-annuel">0 €</div>
-                </div>
-                <div class="overview-card">
-                    <h3>Progression</h3>
-                    <div class="value" id="progression-annuelle">0%</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progress-annuel" style="width: 0%"></div>
-                    </div>
-                </div>
-                <div class="overview-card">
-                    <h3>Ventes Totales</h3>
-                    <div class="value positive" id="ventes-annuelles">0</div>
-                </div>
-                <div class="overview-card">
-                    <h3>Rendez-vous Totaux</h3>
-                    <div class="value neutral" id="prospects-annuels">0</div>
-                </div>
-                <div class="overview-card">
-                    <h3>Taux Global Annuel</h3>
-                    <div class="value" id="taux-annuel">0%</div>
-                </div>
-            </div>
-
-            <div class="chart-container">
-                <h3 style="margin-bottom: 20px;">📈 Évolution mensuelle du CA ${anneeActuelle}</h3>
-                <div class="chart" id="chart-annuel" style="height: 250px;"></div>
-            </div>
-
-            <div class="comparison-section">
-                <div class="stats-card">
-                    <h3>🏆 Classement annuel des vendeurs</h3>
-                    <div id="classement-annuel"></div>
-                </div>
-                <div class="stats-card">
-                    <h3>📊 Statistiques par trimestre</h3>
-                    <div id="stats-trimestrielles"></div>
-                </div>
-            </div>
-
-            <div class="cards-grid">
-                <div class="card">
-                    <h3>🎯 Performance annuelle par vendeur</h3>
-                    <div id="performance-annuelle"></div>
-                </div>
-                <div class="card">
-                    <h3>📈 Meilleur/Pire mois de l'année</h3>
-                    <div id="analyse-mois"></div>
-                </div>
-            </div>
-
-            <div class="chart-container">
-                <h3 style="margin-bottom: 20px;">📊 Répartition du CA par vendeur (${anneeActuelle})</h3>
-                <div style="display: flex; justify-content: center; align-items: center; height: 200px;">
-                    <canvas id="chart-repartition" width="300" height="300"></canvas>
-                </div>
-            </div>
+  <!-- Saisie -->
+  <div id="saisie" class="tab-content">
+    <div class="cards-grid">
+      <div class="card">
+        <h3>📝 Saisie des données</h3>
+        <div class="input-group">
+          <label for="vendeur-select">Vendeur</label>
+          <select id="vendeur-select" onchange="updateSaisieFields()">
+            <option value="Vincent">Vincent</option>
+            <option value="Raphael">Raphael</option>
+            <option value="Léo">Léo</option>
+            <option value="Pablo">Pablo</option>
+            <option value="Nathan">Nathan</option>
+          </select>
         </div>
 
-        <!-- Comparatif -->
-        <div id="comparatif" class="tab-content">
-            <div class="comparison-section">
-                <div class="stats-card">
-                    <h3>📈 Évolution par rapport au mois précédent</h3>
-                    <div id="evolution-content"></div>
-                </div>
-                <div class="stats-card">
-                    <h3>🎯 Performance vs Objectifs</h3>
-                    <div id="performance-content"></div>
-                </div>
-            </div>
-            
-            <div class="chart-container">
-                <h3 style="margin-bottom: 20px;">📊 Évolution du CA sur 6 mois</h3>
-                <div class="chart" id="chart-evolution"></div>
-            </div>
+        <div class="input-group"><label for="prospects-input">Rendez-vous</label><input type="number" id="prospects-input" placeholder="Nombre de prospects" /></div>
+        <div class="input-group"><label for="ventes-input">Ventes</label><input type="number" id="ventes-input" placeholder="Nombre de ventes" /></div>
+        <div class="input-group"><label for="ca-input">CA (€)</label><input type="number" id="ca-input" placeholder="Chiffre d'affaires" /></div>
+        <div class="input-group"><label for="marge-input">Marge moyenne / vente (€)</label><input type="number" id="marge-input" placeholder="Ex: 2500" min="0" step="50" /></div>
+        <div class="input-group"><label for="objectif-input">Objectif mensuel (€)</label><input type="number" id="objectif-input" placeholder="Ex: 80000" min="0" step="1000" /></div>
+
+        <button class="btn" onclick="sauvegarderDonnees()">💾 Sauvegarder</button>
+      </div>
+
+      <div class="card">
+        <h3>⚙️ Administration</h3>
+        <button class="btn btn-secondary" onclick="exporterDonnees()">📥 Exporter données</button>
+        <button class="btn btn-warning" onclick="reinitialiserMois()">🔄 Réinitialiser mois</button>
+        <button class="btn btn-warning" onclick="reinitialiserTout()">🗑️ Tout effacer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IA -->
+  <div id="ia" class="tab-content">
+    <div class="overview-grid">
+      <div class="overview-card">
+        <h3>Prévision fin de mois (CA)</h3>
+        <div class="value" id="ia-prev-ca">0 €</div>
+        <div class="trend" id="ia-prev-trend"></div>
+      </div>
+      <div class="overview-card">
+        <h3>Prévision Ventes</h3>
+        <div class="value" id="ia-prev-ventes">0</div>
+        <div class="trend" id="ia-prev-ventes-trend"></div>
+      </div>
+      <div class="overview-card">
+        <h3>Taux conversion prévisionnel</h3>
+        <div class="value" id="ia-prev-taux">0%</div>
+      </div>
+      <div class="overview-card">
+        <h3>Paramètres seuil</h3>
+        <div class="input-group" style="margin-top:10px;">
+          <label for="seuil-marge">Seuil minimal / vente (€)</label>
+          <input type="number" id="seuil-marge" value="2000" min="0" oninput="updateIATab()" />
         </div>
-
-        <!-- Saisie -->
-        <div id="saisie" class="tab-content">
-            <div class="cards-grid">
-                <div class="card">
-                    <h3>📝 Saisie des données</h3>
-                    
-                    <div class="input-group">
-                        <label for="vendeur-select">Vendeur</label>
-                        <select id="vendeur-select">
-                            <option value="Vincent">Vincent</option>
-                            <option value="Raphael">Raphael</option>
-                            <option value="Léo">Léo</option>
-                            <option value="Pablo">Pablo</option>
-                            <option value="Nathan">Nathan</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="prospects-input">Prospects</label>
-                        <input type="number" id="prospects-input" placeholder="Nombre de prospects">
-                    </div>
-
-                    <div class="input-group">
-                        <label for="ventes-input">Ventes</label>
-                        <input type="number" id="ventes-input" placeholder="Nombre de ventes">
-                    </div>
-
-                    <div class="input-group">
-                        <label for="ca-input">CA (€)</label>
-                        <input type="number" id="ca-input" placeholder="Chiffre d'affaires">
-                    </div>
-
-                    <button class="btn" onclick="sauvegarderDonnees()">💾 Sauvegarder</button>
-                </div>
-
-                <div class="card">
-                    <h3>⚙️ Administration</h3>
-                    
-                    <button class="btn btn-secondary" onclick="exporterDonnees()">📥 Exporter données</button>
-                    <button class="btn btn-warning" onclick="reinitialiserMois()">🔄 Réinitialiser mois</button>
-                    <button class="btn btn-warning" onclick="reinitialiserTout()">🗑️ Tout effacer</button>
-                    
-                    <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-radius: 8px;">
-                        <h4 style="margin-bottom: 10px;">📋 Actions rapides :</h4>
-                        <button class="btn btn-secondary" onclick="genererDonneesDemonstration()">🎭 Données démo</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div style="font-size:12px; color:#4a5568;">ℹ️ Le calcul des marges utilise la <strong>marge moyenne / vente (€) personnalisée</strong> saisie dans l'onglet <em>Saisie</em>.</div>
+      </div>
     </div>
 
-    <script>
-        // Configuration initiale
-        const MOIS_NOMS = [
-            'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-            'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-        ];
+    <div class="cards-grid">
+      <div class="card">
+        <h3>🧠 Recommandations pour améliorer le taux de transformation</h3>
+        <div id="ia-suggestions"></div>
+        <button class="btn" style="margin-top:10px;" onclick="updateIATab()">🔁 Générer recommandations</button>
+      </div>
+      <div class="card">
+        <h3>💶 Marges minimales par vendeur (≥ <span id="label-seuil-marge">2000</span> €)</h3>
+        <div class="stats-card" style="margin-top:10px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Vendeur</th>
+                <th>Ventes</th>
+                <th>CA</th>
+                <th>Marge moyenne</th>
+                <th>Marge totale</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody id="ia-marges"></tbody>
+          </table>
+        </div>
+        <div id="ia-messages" style="margin-top:10px;"></div>
+      </div>
+    </div>
 
-        let moisActuel = new Date().getMonth();
-        let anneeActuelle = new Date().getFullYear();
+    <div class="chart-container">
+      <h3 style="margin-bottom: 20px;">📊 CA prévisionnel vs Réalisé (6 derniers mois)</h3>
+      <div class="chart" id="ia-chart-prev"></div>
+    </div>
+  </div>
+</div>
 
-        // Structure des données par mois
-        let donneesParMois = {};
+<script>
+// === Configuration initiale ===
+const MOIS_NOMS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+let moisActuel = new Date().getMonth();
+let anneeActuelle = new Date().getFullYear();
+let donneesParMois = {};
 
-        // Initialisation des données vides pour tous les mois
-        function initialiserDonnees() {
-            for (let mois = 0; mois < 12; mois++) {
-                const key = `${anneeActuelle}-${mois}`;
-                if (!donneesParMois[key]) {
-                    donneesParMois[key] = {
-                        'Vincent': { prospects: 0, ventes: 0, ca: 0, objectif: 80000 },
-                        'Raphael': { prospects: 0, ventes: 0, ca: 0, objectif: 100000 },
-                        'Léo': { prospects: 0, ventes: 0, ca: 0, objectif: 75000 },
-                        'Pablo': { prospects: 0, ventes: 0, ca: 0, objectif: 90000 },
-                        'Nathan': { prospects: 0, ventes: 0, ca: 0, objectif: 85000 }
-                    };
-                }
-            }
+function vendeurDefaults(){
+  return {
+    'Vincent': { prospects:0, ventes:0, ca:0, objectif:80000, margeValeur:2500 },
+    'Raphael': { prospects:0, ventes:0, ca:0, objectif:100000, margeValeur:2600 },
+    'Léo':     { prospects:0, ventes:0, ca:0, objectif:75000, margeValeur:2200 },
+    'Pablo':   { prospects:0, ventes:0, ca:0, objectif:90000, margeValeur:2400 },
+    'Nathan':  { prospects:0, ventes:0, ca:0, objectif:85000, margeValeur:2300 }
+  };
+}
+
+function getMoisKey(mois=moisActuel, annee=anneeActuelle){ return `${annee}-${mois}`; }
+function getDonneesActuelles(){ return donneesParMois[getMoisKey()]; }
+
+function initialiserDonnees(){
+  for(let mois=0; mois<12; mois++){
+    const key = `${anneeActuelle}-${mois}`;
+    if(!donneesParMois[key]){
+      donneesParMois[key] = vendeurDefaults();
+    }else{
+      // Backfill champs si ancien format
+      for(const v in donneesParMois[key]){
+        const x = donneesParMois[key][v];
+        if(x.margeValeur === undefined){
+          const panier = x.ventes>0 ? x.ca/x.ventes : 10000;
+          donneesParMois[key][v].margeValeur = Math.max(1000, Math.round(panier*0.25));
         }
+        if(x.objectif === undefined){ donneesParMois[key][v].objectif = 80000; }
+      }
+    }
+  }
+}
 
-        function getMoisKey(mois = moisActuel, annee = anneeActuelle) {
-            return `${annee}-${mois}`;
-        }
+// === Navigation mois ===
+function changerMois(direction){
+  moisActuel += direction;
+  if(moisActuel<0){ moisActuel=11; anneeActuelle--; }
+  else if(moisActuel>11){ moisActuel=0; anneeActuelle++; }
+  const key = getMoisKey();
+  if(!donneesParMois[key]){ donneesParMois[key] = vendeurDefaults(); }
+  updateMoisAffichage();
+  const activeTab = document.querySelector('.tab.active');
+  if(activeTab){
+    const tabName = activeTab.getAttribute('onclick').match(/'(.*?)'/)[1];
+    updateTabContent(tabName);
+  }
+  updateSaisieFields();
+}
 
-        function getDonneesActuelles() {
-            return donneesParMois[getMoisKey()];
-        }
+function updateMoisAffichage(){
+  document.getElementById('current-month').textContent = `${MOIS_NOMS[moisActuel]} ${anneeActuelle}`;
+  const yEls = [document.getElementById('annee-actuelle-1'), document.getElementById('annee-actuelle-2')];
+  yEls.forEach(el=>{ if(el) el.textContent = anneeActuelle; });
+}
 
-        // Navigation entre les mois
-        function changerMois(direction) {
-            moisActuel += direction;
-            
-            if (moisActuel < 0) {
-                moisActuel = 11;
-                anneeActuelle--;
-            } else if (moisActuel > 11) {
-                moisActuel = 0;
-                anneeActuelle++;
-            }
-            
-            // S'assurer que les données existent pour le nouveau mois
-            const key = getMoisKey();
-            if (!donneesParMois[key]) {
-                donneesParMois[key] = {
-                    'Vincent': { prospects: 0, ventes: 0, ca: 0, objectif: 80000 },
-                    'Raphael': { prospects: 0, ventes: 0, ca: 0, objectif: 100000 },
-                    'Léo': { prospects: 0, ventes: 0, ca: 0, objectif: 75000 },
-                    'Pablo': { prospects: 0, ventes: 0, ca: 0, objectif: 90000 },
-                    'Nathan': { prospects: 0, ventes: 0, ca: 0, objectif: 85000 }
-                };
-            }
-            
-            updateMoisAffichage();
-            
-            // Mettre à jour l'onglet actif
-            const activeTab = document.querySelector('.tab.active');
-            if (activeTab) {
-                const tabName = activeTab.textContent.includes('ensemble') ? 'vue-ensemble' :
-                               activeTab.textContent.includes('Vendeurs') ? 'vendeurs' :
-                               activeTab.textContent.includes('Annuelle') ? 'vue-annuelle' :
-                               activeTab.textContent.includes('Comparatif') ? 'comparatif' : 'saisie';
-                               
-                updateTabContent(tabName);
-            }
-        }
+// === Onglets ===
+function showTab(e, tabName){
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+  if(e && e.target) e.target.classList.add('active');
+  updateTabContent(tabName);
+}
 
-        function updateMoisAffichage() {
-            document.getElementById('current-month').textContent = 
-                `${MOIS_NOMS[moisActuel]} ${anneeActuelle}`;
-        }
+function updateTabContent(tabName){
+  switch(tabName){
+    case 'vue-ensemble': updateVueEnsemble(); break;
+    case 'vendeurs': updateVendeurs(); break;
+    case 'vue-annuelle': updateVueAnnuelle(); break;
+    case 'comparatif': updateComparatif(); break;
+    case 'ia': updateIATab(); break;
+    case 'saisie': updateSaisieFields(); break;
+  }
+}
 
-        // Navigation entre onglets
-        function showTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-            
-            updateTabContent(tabName);
-        }
+// === Tendances util ===
+function calculerTendance(valeurActuelle, valeurPrecedente){
+  if(valeurPrecedente===0) return { type:'equal', text:'Nouveau' };
+  const evolution = ((valeurActuelle - valeurPrecedente) / valeurPrecedente) * 100;
+  if(evolution>0) return { type:'up', text:`+${evolution.toFixed(1)}%` };
+  if(evolution<0) return { type:'down', text:`${evolution.toFixed(1)}%` };
+  return { type:'equal', text:'0%' };
+}
+function afficherTendance(elementId, valeurActuelle, valeurPrecedente){
+  const el = document.getElementById(elementId);
+  const t = calculerTendance(valeurActuelle, valeurPrecedente);
+  el.innerHTML = `<span class="evolution-indicator evolution-${t.type}">${t.type==='up'?'↗':t.type==='down'?'↘':'→'} ${t.text}</span>`;
+}
 
-        function updateTabContent(tabName) {
-            switch(tabName) {
-                case 'vue-ensemble':
-                    updateVueEnsemble();
-                    break;
-                case 'vendeurs':
-                    updateVendeurs();
-                    break;
-                case 'vue-annuelle':
-                    updateVueAnnuelle();
-                    break;
-                case 'comparatif':
-                    updateComparatif();
-                    break;
-            }
-        }
+// === Vue d'ensemble ===
+function updateVueEnsemble(){
+  const d = getDonneesActuelles();
+  const moisPrec = moisActuel===0?11:moisActuel-1; const anPrec = moisActuel===0?anneeActuelle-1:anneeActuelle;
+  const dPrec = donneesParMois[`${anPrec}-${moisPrec}`] || {};
+  let totalProspects=0,totalVentes=0,totalCA=0,totalObjectif=0; let prevProspects=0,prevVentes=0,prevCA=0; let bestVendeur='',bestCA=0,bestTaux=0,bestProgression=0;
+  for(const v in d){ const x=d[v]; totalProspects+=x.prospects; totalVentes+=x.ventes; totalCA+=x.ca; totalObjectif+=x.objectif; const taux=x.prospects>0?(x.ventes/x.prospects*100):0; const prog=x.objectif>0?(x.ca/x.objectif*100):0; if(x.ca>bestCA){ bestCA=x.ca; bestVendeur=v; bestTaux=taux; bestProgression=prog; } }
+  for(const v in dPrec){ const x=dPrec[v]||{prospects:0,ventes:0,ca:0}; prevProspects+=x.prospects; prevVentes+=x.ventes; prevCA+=x.ca; }
+  const tauxGlobal = totalProspects>0 ? (totalVentes/totalProspects*100) : 0;
+  const progressionCA = totalObjectif>0 ? (totalCA/totalObjectif*100) : 0;
+  const prevTaux = prevProspects>0 ? (prevVentes/prevProspects*100) : 0;
+  document.getElementById('total-prospects').textContent = totalProspects;
+  document.getElementById('total-ventes').textContent = totalVentes;
+  document.getElementById('taux-global').textContent = tauxGlobal.toFixed(1)+'%';
+  document.getElementById('taux-global').className = 'value '+(tauxGlobal>=20?'positive':'neutral');
+  document.getElementById('ca-realise').textContent = totalCA.toLocaleString()+' €';
+  document.getElementById('objectif-total').textContent = totalObjectif.toLocaleString()+' €';
+  document.getElementById('progression-total').textContent = progressionCA.toFixed(1)+'%';
+  document.getElementById('progression-total').className = 'value '+(progressionCA>=100?'positive':'neutral');
+  document.getElementById('progress-ca').style.width = Math.min(100, progressionCA)+'%';
+  document.getElementById('top-vendeur').textContent = bestVendeur||'-';
+  document.getElementById('top-ca').textContent = bestCA.toLocaleString()+' €';
+  document.getElementById('top-taux').textContent = bestTaux.toFixed(1)+'%';
+  document.getElementById('top-progression').textContent = bestProgression.toFixed(1)+'%';
+  afficherTendance('trend-prospects', totalProspects, prevProspects);
+  afficherTendance('trend-ventes', totalVentes, prevVentes);
+  afficherTendance('trend-taux', tauxGlobal, prevTaux);
+  afficherTendance('trend-ca', totalCA, prevCA);
+  updateChart();
+  updateAlertes();
+}
 
-        // Calcul des tendances
-        function calculerTendance(valeurActuelle, valeurPrecedente) {
-            if (valeurPrecedente === 0) return { type: 'equal', text: 'Nouveau' };
-            
-            const evolution = ((valeurActuelle - valeurPrecedente) / valeurPrecedente) * 100;
-            
-            if (evolution > 0) {
-                return { type: 'up', text: `+${evolution.toFixed(1)}%` };
-            } else if (evolution < 0) {
-                return { type: 'down', text: `${evolution.toFixed(1)}%` };
-            } else {
-                return { type: 'equal', text: '0%' };
-            }
-        }
+function updateChart(){
+  const chart = document.getElementById('chart-vendeurs');
+  const d = getDonneesActuelles();
+  const vendeurs = Object.keys(d);
+  let html='';
+  const maxCA = Math.max(...vendeurs.map(v=>d[v].ca));
+  vendeurs.forEach(v=>{
+    const x=d[v]; const height = maxCA>0?Math.max(30,(x.ca/maxCA)*160):30;
+    html += `<div class="bar-group"><div class="bar" style="height:${height}px;"><div class="bar-value">${(x.ca/1000).toFixed(0)}k€</div></div><div class="bar-label">${v}</div></div>`;
+  });
+  chart.innerHTML = html;
+}
 
-        function afficherTendance(elementId, valeurActuelle, valeurPrecedente) {
-            const element = document.getElementById(elementId);
-            const tendance = calculerTendance(valeurActuelle, valeurPrecedente);
-            
-            element.innerHTML = `
-                <span class="evolution-indicator evolution-${tendance.type}">
-                    ${tendance.type === 'up' ? '↗' : tendance.type === 'down' ? '↘' : '→'} ${tendance.text}
-                </span>
-            `;
-        }
+function updateAlertes(){
+  const container = document.getElementById('alertes-marges');
+  const d = getDonneesActuelles();
+  let alertes=[];
+  for(const v in d){ const x=d[v]; const prog=x.objectif>0?(x.ca/x.objectif*100):0; if(prog<50){ alertes.push(`${v} : ${prog.toFixed(1)}% de son objectif`); } }
+  container.innerHTML = alertes.length===0 ? `<div class="alert alert-success"><strong>✅ Excellent !</strong> Tous les vendeurs progressent bien vers leurs objectifs.</div>` : `<div class="alert alert-warning"><strong>⚠️ ${alertes.length} vendeur(s) en retard sur objectifs :</strong><br>${alertes.join('<br>')}</div>`;
+}
 
-        // Mise à jour de la vue d'ensemble
-        function updateVueEnsemble() {
-            const donneesActuelles = getDonneesActuelles();
-            const moisPrecedent = moisActuel === 0 ? 11 : moisActuel - 1;
-            const anneePrecedente = moisActuel === 0 ? anneeActuelle - 1 : anneeActuelle;
-            const donneesPrecedentes = donneesParMois[`${anneePrecedente}-${moisPrecedent}`] || {};
-            
-            let totalProspects = 0, totalVentes = 0, totalCA = 0, totalObjectif = 0;
-            let prevProspects = 0, prevVentes = 0, prevCA = 0;
-            let bestVendeur = '', bestCA = 0, bestTaux = 0, bestProgression = 0;
+// === Vendeurs ===
+function updateVendeurs(){
+  const grid = document.getElementById('vendeurs-grid');
+  const d = getDonneesActuelles(); grid.innerHTML='';
+  for(const v in d){ const x=d[v]; const taux=x.prospects>0?(x.ventes/x.prospects*100):0; const prog=x.objectif>0?(x.ca/x.objectif*100):0; const ecart=x.ca-x.objectif;
+    const card=document.createElement('div'); card.className='card'; card.innerHTML = `
+      <h3>👤 ${v}</h3>
+      <div class="metric"><span>Prospects</span><span class="metric-value neutral">${x.prospects}</span></div>
+      <div class="metric"><span>Ventes</span><span class="metric-value positive">${x.ventes}</span></div>
+      <div class="metric"><span>CA</span><span class="metric-value positive">${x.ca.toLocaleString()} €</span></div>
+      <div class="metric"><span>Objectif</span><span class="metric-value neutral">${x.objectif.toLocaleString()} €</span></div>
+      <div class="metric"><span>Marge moyenne / vente</span><span class="metric-value neutral">${(x.margeValeur??2500).toLocaleString()} €</span></div>
+      <div class="metric"><span>Écart objectif</span><span class="metric-value ${ecart>=0?'positive':'negative'}">${ecart>=0?'+':''}${ecart.toLocaleString()} €</span></div>
+      <div class="metric"><span>Taux conversion</span><span class="metric-value ${taux>=25?'positive':'neutral'}">${taux.toFixed(1)}%</span></div>
+      <div class="metric"><span>Progression</span><span class="metric-value ${prog>=100?'positive':'neutral'}">${prog.toFixed(1)}%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,prog)}%"></div></div>
+      ${prog<50?`<div class="alert alert-warning" style="margin-top:15px;"><strong>⚠️ Attention :</strong> Progression faible (${prog.toFixed(1)}%)</div>`:''}
+    `; grid.appendChild(card);
+  }
+}
 
-            // Calculs pour le mois actuel
-            for (let vendeur in donneesActuelles) {
-                const data = donneesActuelles[vendeur];
-                totalProspects += data.prospects;
-                totalVentes += data.ventes;
-                totalCA += data.ca;
-                totalObjectif += data.objectif;
+// === Comparatif ===
+function updateComparatif(){ updateEvolution(); updatePerformance(); updateChartEvolution(); }
+function updateEvolution(){
+  const container = document.getElementById('evolution-content');
+  const d = getDonneesActuelles();
+  const moisPrec = moisActuel===0?11:moisActuel-1; const anPrec = moisActuel===0?anneeActuelle-1:anneeActuelle; const dPrec = donneesParMois[`${anPrec}-${moisPrec}`]||{};
+  let html=''; let totalCA=0,prevCA=0,totalVentes=0,prevVentes=0;
+  for(const v in d){ totalCA+=d[v].ca; totalVentes+=d[v].ventes; }
+  for(const v in dPrec){ prevCA+=dPrec[v]?.ca||0; prevVentes+=dPrec[v]?.ventes||0; }
+  const evoCA=calculerTendance(totalCA,prevCA); const evoV=calculerTendance(totalVentes,prevVentes);
+  html += `<div class="metric"><span>CA Total</span><span class="evolution-indicator evolution-${evoCA.type}">${evoCA.type==='up'?'↗':evoCA.type==='down'?'↘':'→'} ${evoCA.text}</span></div>`;
+  html += `<div class="metric"><span>Ventes Totales</span><span class="evolution-indicator evolution-${evoV.type}">${evoV.type==='up'?'↗':evoV.type==='down'?'↘':'→'} ${evoV.text}</span></div>`;
+  html += `<hr style="margin: 15px 0;">`;
+  for(const v in d){ const actuel=d[v].ca; const precedent=dPrec[v]?.ca||0; const ev=calculerTendance(actuel,precedent); html += `<div class="metric"><span>${v}</span><span class="evolution-indicator evolution-${ev.type}">${ev.type==='up'?'↗':ev.type==='down'?'↘':'→'} ${ev.text}</span></div>`; }
+  container.innerHTML = html;
+}
+function updatePerformance(){
+  const container = document.getElementById('performance-content');
+  const d = getDonneesActuelles(); let html='';
+  for(const v in d){ const x=d[v]; const prog=x.objectif>0?(x.ca/x.objectif*100):0; const status=prog>=100?'positive':prog>=75?'neutral':'negative'; const icon=prog>=100?'🎯':prog>=75?'📈':'⚠️'; html += `<div class="metric"><span>${icon} ${v}</span><span class="metric-value ${status}">${prog.toFixed(1)}%</span></div>`; }
+  container.innerHTML = html;
+}
+function updateChartEvolution(){
+  const chart = document.getElementById('chart-evolution'); let html='';
+  const moisData=[]; for(let i=5;i>=0;i--){ let m=moisActuel-i; let a=anneeActuelle; if(m<0){ m+=12; a--; } const key=`${a}-${m}`; const d=donneesParMois[key]||{}; let totalCA=0; for(const v in d){ totalCA+=d[v]?.ca||0; } moisData.push({ mois: MOIS_NOMS[m].substring(0,3), ca: totalCA, isActuel: m===moisActuel && a===anneeActuelle }); }
+  const maxCA = Math.max(...moisData.map(m=>m.ca));
+  moisData.forEach(({mois,ca,isActuel})=>{ const h=maxCA>0?Math.max(30,(ca/maxCA)*160):30; html += `<div class="bar-group"><div class="bar" style="height:${h}px; background:${isActuel?'linear-gradient(to top,#667eea,#764ba2)':'linear-gradient(to top,#48bb78,#38a169)'}; ${isActuel?'box-shadow:0 4px 20px rgba(102,126,234,0.4);':''}"><div class="bar-value">${(ca/1000).toFixed(0)}k€</div></div><div class="bar-label" style="font-weight:${isActuel?'bold':'normal'}">${mois}</div></div>`; });
+  chart.innerHTML = html;
+}
 
-                const taux = data.prospects > 0 ? (data.ventes / data.prospects * 100) : 0;
-                const progression = data.objectif > 0 ? (data.ca / data.objectif * 100) : 0;
-                
-                if (data.ca > bestCA) {
-                    bestCA = data.ca;
-                    bestVendeur = vendeur;
-                    bestTaux = taux;
-                    bestProgression = progression;
-                }
-            }
+// === Vue Annuelle (placeholder) ===
+function updateVueAnnuelle(){
+  document.getElementById('annee-actuelle-1').textContent = anneeActuelle;
+  document.getElementById('annee-actuelle-2').textContent = anneeActuelle;
+}
 
-            // Calculs pour le mois précédent
-            for (let vendeur in donneesPrecedentes) {
-                const data = donneesPrecedentes[vendeur] || { prospects: 0, ventes: 0, ca: 0 };
-                prevProspects += data.prospects;
-                prevVentes += data.ventes;
-                prevCA += data.ca;
-            }
+// === IA & Marges ===
+function somme(obj, fn){ let s=0; for(const v in obj){ s += fn(obj[v]); } return s; }
+function moyenne(a,b){ return b>0 ? a/b : 0; }
 
-            const tauxGlobal = totalProspects > 0 ? (totalVentes / totalProspects * 100) : 0;
-            const progressionCA = totalObjectif > 0 ? (totalCA / totalObjectif * 100) : 0;
-            const prevTaux = prevProspects > 0 ? (prevVentes / prevProspects * 100) : 0;
+function forecastCA(){
+  // Prévision simple: moyenne des 3 derniers mois + pondération du réalisé courant
+  const points=[]; for(let i=3;i>=1;i--){ let m=moisActuel-i; let a=anneeActuelle; if(m<0){ m+=12; a--; }
+    const key=`${a}-${m}`; const d=donneesParMois[key]||{}; points.push(somme(d, x=>x.ca)); }
+  const avg3 = points.length? points.reduce((a,b)=>a+b,0)/points.length : 0;
+  const courant = somme(getDonneesActuelles(), x=>x.ca);
+  return Math.round(0.6*avg3 + 0.4*courant); // pondération douce
+}
 
-            // Mise à jour des valeurs
-            document.getElementById('total-prospects').textContent = totalProspects;
-            document.getElementById('total-ventes').textContent = totalVentes;
-            document.getElementById('taux-global').textContent = tauxGlobal.toFixed(1) + '%';
-            document.getElementById('taux-global').className = 'value ' + (tauxGlobal >= 20 ? 'positive' : 'neutral');
-            
-            document.getElementById('ca-realise').textContent = totalCA.toLocaleString() + ' €';
-            document.getElementById('objectif-total').textContent = totalObjectif.toLocaleString() + ' €';
-            document.getElementById('progression-total').textContent = progressionCA.toFixed(1) + '%';
-            document.getElementById('progression-total').className = 'value ' + (progressionCA >= 100 ? 'positive' : 'neutral');
-            document.getElementById('progress-ca').style.width = Math.min(100, progressionCA) + '%';
+function forecastVentes(){
+  const d = getDonneesActuelles(); const ventes = somme(d, x=>x.ventes); const prospects = somme(d, x=>x.prospects);
+  const tauxActuel = moyenne(ventes, prospects); // en ratio 0..1
+  const cible = Math.max(tauxActuel, 0.22); // cible mini 22%
+  const ventesPrev = Math.round(Math.max(ventes, prospects * cible));
+  return { ventesPrev, tauxPrev: cible*100 };
+}
 
-            document.getElementById('top-vendeur').textContent = bestVendeur || '-';
-            document.getElementById('top-ca').textContent = bestCA.toLocaleString() + ' €';
-            document.getElementById('top-taux').textContent = bestTaux.toFixed(1) + '%';
-            document.getElementById('top-progression').textContent = bestProgression.toFixed(1) + '%';
+function buildSuggestions(){
+  const d = getDonneesActuelles();
+  const suggestions=[];
+  for(const v in d){ const x=d[v]; const taux = x.prospects>0?(x.ventes/x.prospects):0; const tauxPct=(taux*100).toFixed(1);
+    const avgPanier = x.ventes>0 ? (x.ca/x.ventes) : 4000; // hypothèse par défaut
+    const manqueCA = Math.max(0, x.objectif - x.ca);
+    const ventesNec = Math.ceil(manqueCA / Math.max(1, avgPanier));
+    const convCible = 0.25; // cible 25%
+    const rdvSupp = Math.max(0, Math.ceil(ventesNec/Math.max(convCible, taux || 0.18)));
+    const items = [];
+    if(taux < 0.2) items.push(`Coaching pitch & traitement objections (taux actuel ${tauxPct}%)`);
+    if(x.prospects < 40) items.push(`Ajouter ~${Math.max(10, rdvSupp)} RDV qualifiés (ciblage comptes à forte propension)`);
+    if(manqueCA > 0) items.push(`Upsell/Cross-sell: viser panier moyen ≥ ${(avgPanier*1.1).toFixed(0)} € pour rattraper ${manqueCA.toLocaleString()} €`);
+    if(x.ventes>0 && avgPanier<5000) items.push(`Revoir politique de remise et bundles pour relever le panier moyen`);
+    if(items.length===0) items.push('Rien d’urgent — maintenir cadence et relances à J+2/J+7');
+    suggestions.push({ v, items });
+  }
+  return suggestions;
+}
 
-            // Affichage des tendances
-            afficherTendance('trend-prospects', totalProspects, prevProspects);
-            afficherTendance('trend-ventes', totalVentes, prevVentes);
-            afficherTendance('trend-taux', tauxGlobal, prevTaux);
-            afficherTendance('trend-ca', totalCA, prevCA);
+function updateIATab(){
+  const seuil = parseInt(document.getElementById('seuil-marge').value)||2000;
+  document.getElementById('label-seuil-marge').textContent = seuil.toLocaleString();
 
-            updateChart();
-            updateAlertes();
-        }
+  // Prévisions
+  const prevCA = forecastCA();
+  const { ventesPrev, tauxPrev } = forecastVentes();
+  document.getElementById('ia-prev-ca').textContent = prevCA.toLocaleString()+' €';
+  document.getElementById('ia-prev-ventes').textContent = ventesPrev.toString();
+  document.getElementById('ia-prev-taux').textContent = tauxPrev.toFixed(1)+'%';
 
-        // Mise à jour du graphique
-        function updateChart() {
-            const chart = document.getElementById('chart-vendeurs');
-            const donneesActuelles = getDonneesActuelles();
-            const vendeurs = Object.keys(donneesActuelles);
-            
-            let html = '';
-            const maxCA = Math.max(...vendeurs.map(v => donneesActuelles[v].ca));
-            
-            vendeurs.forEach(vendeur => {
-                const data = donneesActuelles[vendeur];
-                const height = maxCA > 0 ? Math.max(30, (data.ca / maxCA) * 160) : 30;
-                
-                html += `
-                    <div class="bar-group">
-                        <div class="bar" style="height: ${height}px;">
-                            <div class="bar-value">${(data.ca/1000).toFixed(0)}k€</div>
-                        </div>
-                        <div class="bar-label">${vendeur}</div>
-                    </div>
-                `;
-            });
-            
-            chart.innerHTML = html;
-        }
+  // Tendances vs mois précédent
+  const moisPrec = moisActuel===0?11:moisActuel-1; const anPrec = moisActuel===0?anneeActuelle-1:anneeActuelle; const dPrec = donneesParMois[`${anPrec}-${moisPrec}`]||{};
+  const caPrec = somme(dPrec, x=>x.ca); const ventesPrec = somme(dPrec, x=>x.ventes);
+  const tCA = calculerTendance(prevCA, caPrec); const tV = calculerTendance(ventesPrev, ventesPrec);
+  document.getElementById('ia-prev-trend').innerHTML = `<span class="evolution-indicator evolution-${tCA.type}">${tCA.type==='up'?'↗':'↘'} ${tCA.text}</span>`;
+  document.getElementById('ia-prev-ventes-trend').innerHTML = `<span class="evolution-indicator evolution-${tV.type}">${tV.type==='up'?'↗':'↘'} ${tV.text}</span>`;
 
-        // Mise à jour des alertes
-        function updateAlertes() {
-            const container = document.getElementById('alertes-marges');
-            const donneesActuelles = getDonneesActuelles();
-            let alertes = [];
+  // Recos
+  const sug = buildSuggestions();
+  const sugEl = document.getElementById('ia-suggestions');
+  let html='';
+  sug.forEach(({v,items})=>{
+    html += `<div class="stats-card" style="margin-bottom:10px;"><h4>👤 ${v}</h4>${items.map(i=>`<div class=\"metric\"><span>✅</span><span class=\"metric-value neutral\" style=\"font-weight:500;\">${i}</span></div>`).join('')}</div>`;
+  });
+  sugEl.innerHTML = html;
 
-            for (let vendeur in donneesActuelles) {
-                const data = donneesActuelles[vendeur];
-                const progression = data.objectif > 0 ? (data.ca / data.objectif * 100) : 0;
-                
-                if (progression < 50) {
-                    alertes.push(`${vendeur} : ${progression.toFixed(1)}% de son objectif`);
-                }
-            }
+  // Table marges (valeur unitaire)
+  const d = getDonneesActuelles(); const body = document.getElementById('ia-marges'); body.innerHTML='';
+  let nbSousSeuil=0;
+  for(const v in d){ const x=d[v]; const margeU = x.margeValeur ?? 2500; const margeTot = Math.round((x.ventes||0) * margeU); const ok = margeU >= seuil; if(!ok) nbSousSeuil++;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${v}</td>
+      <td>${x.ventes}</td>
+      <td>${x.ca.toLocaleString()} €</td>
+      <td>${margeU.toLocaleString()} € / vente</td>
+      <td>${margeTot.toLocaleString()} €</td>
+      <td class="${ok?'positive':'negative'}">${ok?'OK ✅':`<strong>⚠️ Sous ${seuil.toLocaleString()} €</strong>`}</td>`;
+    body.appendChild(tr);
+  }
+  document.getElementById('ia-messages').innerHTML = nbSousSeuil===0
+    ? `<div class="alert alert-success"><strong>👍 Parfait :</strong> toutes les marges/vente sont ≥ ${seuil.toLocaleString()} €.</div>`
+    : `<div class="alert alert-warning"><strong>Attention :</strong> ${nbSousSeuil} vendeur(s) sous le seuil. Ajuster prix/remises, mix produit ou qualification.</div>`;
 
-            if (alertes.length === 0) {
-                container.innerHTML = `
-                    <div class="alert alert-success">
-                        <strong>✅ Excellent !</strong> Tous les vendeurs progressent bien vers leurs objectifs.
-                    </div>
-                `;
-            } else {
-                container.innerHTML = `
-                    <div class="alert alert-warning">
-                        <strong>⚠️ ${alertes.length} vendeur(s) en retard sur objectifs :</strong><br>
-                        ${alertes.join('<br>')}
-                    </div>
-                `;
-            }
-        }
+  // Mini chart prévision vs réalisé
+  const chart = document.getElementById('ia-chart-prev'); let bars='';
+  const moisData=[]; for(let i=5;i>=1;i--){ let m=moisActuel-i; let a=anneeActuelle; if(m<0){ m+=12; a--; } const key=`${a}-${m}`; const dM=donneesParMois[key]||{}; moisData.push({ label: MOIS_NOMS[m].substring(0,3), ca: somme(dM, x=>x.ca), current:false }); }
+  moisData.push({ label: MOIS_NOMS[moisActuel].substring(0,3), ca: prevCA, current:true });
+  const maxCA=Math.max(...moisData.map(m=>m.ca),1);
+  moisData.forEach(({label,ca,current})=>{ const h = Math.max(30,(ca/maxCA)*160); bars += `<div class=\"bar-group\"><div class=\"bar\" style=\"height:${h}px; background:${current?'linear-gradient(to top,#667eea,#764ba2)':'linear-gradient(to top,#48bb78,#38a169)'};\"><div class=\"bar-value\">${(ca/1000).toFixed(0)}k€</div></div><div class=\"bar-label\" style=\"font-weight:${current?'bold':'normal'}\">${label}</div></div>`; });
+  chart.innerHTML = bars;
+}
 
-        // Mise à jour des vendeurs
-        function updateVendeurs() {
-            const grid = document.getElementById('vendeurs-grid');
-            const donneesActuelles = getDonneesActuelles();
-            grid.innerHTML = '';
+// === Saisie & Admin ===
+function updateSaisieFields(){
+  const sel = document.getElementById('vendeur-select');
+  const v = sel.value;
+  const d = getDonneesActuelles();
+  const marge = d[v]?.margeValeur ?? 2500;
+  const objectif = d[v]?.objectif ?? 80000;
+  document.getElementById('marge-input').value = marge;
+  document.getElementById('objectif-input').value = objectif;
+}
 
-            for (let vendeur in donneesActuelles) {
-                const data = donneesActuelles[vendeur];
-                const taux = data.prospects > 0 ? (data.ventes / data.prospects * 100) : 0;
-                const progression = data.objectif > 0 ? (data.ca / data.objectif * 100) : 0;
-                const ecart = data.ca - data.objectif;
+function showNotification(message, type='success'){
+  const n=document.createElement('div'); n.className=`notification ${type}`; n.textContent=message; document.body.appendChild(n);
+  setTimeout(()=>n.classList.add('show'),100); setTimeout(()=>{ n.classList.remove('show'); setTimeout(()=>document.body.removeChild(n),300); },3000);
+}
 
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <h3>👤 ${vendeur}</h3>
-                    <div class="metric">
-                        <span>Prospects</span>
-                        <span class="metric-value neutral">${data.prospects}</span>
-                    </div>
-                    <div class="metric">
-                        <span>Ventes</span>
-                        <span class="metric-value positive">${data.ventes}</span>
-                    </div>
-                    <div class="metric">
-                        <span>CA</span>
-                        <span class="metric-value positive">${data.ca.toLocaleString()} €</span>
-                    </div>
-                    <div class="metric">
-                        <span>Objectif</span>
-                        <span class="metric-value neutral">${data.objectif.toLocaleString()} €</span>
-                    </div>
-                    <div class="metric">
-                        <span>Écart objectif</span>
-                        <span class="metric-value ${ecart >= 0 ? 'positive' : 'negative'}">${ecart >= 0 ? '+' : ''}${ecart.toLocaleString()} €</span>
-                    </div>
-                    <div class="metric">
-                        <span>Taux conversion</span>
-                        <span class="metric-value ${taux >= 25 ? 'positive' : 'neutral'}">${taux.toFixed(1)}%</span>
-                    </div>
-                    <div class="metric">
-                        <span>Progression</span>
-                        <span class="metric-value ${progression >= 100 ? 'positive' : 'neutral'}">${progression.toFixed(1)}%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${Math.min(100, progression)}%"></div>
-                    </div>
-                    ${progression < 50 ? `
-                        <div class="alert alert-warning" style="margin-top: 15px;">
-                            <strong>⚠️ Attention :</strong> Progression faible (${progression.toFixed(1)}%)
-                        </div>
-                    ` : ''}
-                `;
-                grid.appendChild(card);
-            }
-        }
+function sauvegarderDonnees(){
+  const v=document.getElementById('vendeur-select').value;
+  const prospects=parseInt(document.getElementById('prospects-input').value)||0;
+  const ventes=parseInt(document.getElementById('ventes-input').value)||0;
+  const ca=parseInt(document.getElementById('ca-input').value)||0;
+  const margeInput=document.getElementById('marge-input').value;
+  const objectifInput=document.getElementById('objectif-input').value;
+  const margeU = margeInput !== '' ? Math.max(0, parseFloat(margeInput)) : null;
+  const objectif = objectifInput !== '' ? Math.max(0, parseFloat(objectifInput)) : null;
 
-        // Mise à jour du comparatif
-        function updateComparatif() {
-            updateEvolution();
-            updatePerformance();
-            updateChartEvolution();
-        }
+  if(prospects===0 && ventes===0 && ca===0 && margeU===null && objectif===null){
+    showNotification('Veuillez saisir au moins une valeur','warning'); return;
+  }
+  if(ventes>prospects && prospects>0){
+    showNotification('Erreur : les ventes ne peuvent pas dépasser les prospects','warning'); return;
+  }
+  const d=getDonneesActuelles();
+  d[v].prospects+=prospects;
+  d[v].ventes+=ventes;
+  d[v].ca+=ca;
+  if(margeU!==null) d[v].margeValeur = margeU;
+  if(objectif!==null) d[v].objectif = objectif;
 
-        function updateEvolution() {
-            const container = document.getElementById('evolution-content');
-            const donneesActuelles = getDonneesActuelles();
-            const moisPrecedent = moisActuel === 0 ? 11 : moisActuel - 1;
-            const anneePrecedente = moisActuel === 0 ? anneeActuelle - 1 : anneeActuelle;
-            const donneesPrecedentes = donneesParMois[`${anneePrecedente}-${moisPrecedent}`] || {};
+  // reset inputs (on garde marge & objectif affichés)
+  document.getElementById('prospects-input').value='';
+  document.getElementById('ventes-input').value='';
+  document.getElementById('ca-input').value='';
 
-            let html = '';
-            let totalCA = 0, prevCA = 0, totalVentes = 0, prevVentes = 0;
+  showNotification(`Données sauvegardées pour ${v} (${MOIS_NOMS[moisActuel]})`);
+  const activeTab=document.querySelector('.tab.active'); if(activeTab){ const tabName = activeTab.getAttribute('onclick').match(/'(.*?)'/)[1]; updateTabContent(tabName); }
+}
 
-            // Calculs globaux
-            for (let vendeur in donneesActuelles) {
-                totalCA += donneesActuelles[vendeur].ca;
-                totalVentes += donneesActuelles[vendeur].ventes;
-            }
-            for (let vendeur in donneesPrecedentes) {
-                prevCA += donneesPrecedentes[vendeur]?.ca || 0;
-                prevVentes += donneesPrecedentes[vendeur]?.ventes || 0;
-            }
+function exporterDonnees(){
+  const dataToExport={ donneesParMois, moisActuel, anneeActuelle, dateExport:new Date().toISOString(), version:'2.4-objectifs-mensuels' };
+  const blob=new Blob([JSON.stringify(dataToExport,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`dashboard-commercial-${anneeActuelle}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showNotification('Données exportées avec succès !');
+}
 
-            const evolutionCA = calculerTendance(totalCA, prevCA);
-            const evolutionVentes = calculerTendance(totalVentes, prevVentes);
+function reinitialiserMois(){
+  if(confirm(`Êtes-vous sûr de vouloir réinitialiser les données de ${MOIS_NOMS[moisActuel]} ${anneeActuelle} ?`)){
+    const key=getMoisKey(); donneesParMois[key]= vendeurDefaults();
+    updateTabContent('vue-ensemble'); showNotification(`Données de ${MOIS_NOMS[moisActuel]} réinitialisées`,'warning');
+  }
+}
 
-            html += `
-                <div class="metric">
-                    <span>CA Total</span>
-                    <span class="evolution-indicator evolution-${evolutionCA.type}">
-                        ${evolutionCA.type === 'up' ? '↗' : evolutionCA.type === 'down' ? '↘' : '→'} ${evolutionCA.text}
-                    </span>
-                </div>
-                <div class="metric">
-                    <span>Ventes Totales</span>
-                    <span class="evolution-indicator evolution-${evolutionVentes.type}">
-                        ${evolutionVentes.type === 'up' ? '↗' : evolutionVentes.type === 'down' ? '↘' : '→'} ${evolutionVentes.text}
-                    </span>
-                </div>
-                <hr style="margin: 15px 0;">
-            `;
+function reinitialiserTout(){
+  if(confirm('⚠️ ATTENTION : Cette action supprimera TOUTES les données de TOUS les mois. Êtes-vous absolument certain ?')){
+    donneesParMois={}; initialiserDonnees(); updateTabContent('vue-ensemble'); showNotification('Toutes les données ont été supprimées','warning');
+  }
+}
 
-            // Évolution par vendeur
-            for (let vendeur in donneesActuelles) {
-                const actuel = donneesActuelles[vendeur].ca;
-                const precedent = donneesPrecedentes[vendeur]?.ca || 0;
-                const evolution = calculerTendance(actuel, precedent);
+function genererDonneesDemonstration(){
+  if(confirm('Générer des données de démonstration pour les 6 derniers mois ?')){
+    for(let i=5;i>=0;i--){ let m=moisActuel-i; let a=anneeActuelle; if(m<0){ m+=12; a--; } const key=`${a}-${m}`; const f=0.7+Math.random()*0.6;
+      donneesParMois[key]={
+        'Vincent':{prospects:Math.floor(50*f), ventes:Math.floor(12*f), ca:Math.floor(45000*f), objectif:80000, margeValeur: 1800 + Math.round(Math.random()*1200)},
+        'Raphael':{prospects:Math.floor(60*f), ventes:Math.floor(18*f), ca:Math.floor(75000*f), objectif:100000, margeValeur: 2000 + Math.round(Math.random()*1400)},
+        'Léo':{prospects:Math.floor(45*f), ventes:Math.floor(10*f), ca:Math.floor(35000*f), objectif:75000, margeValeur: 1500 + Math.round(Math.random()*1200)},
+        'Pablo':{prospects:Math.floor(55*f), ventes:Math.floor(15*f), ca:Math.floor(60000*f), objectif:90000, margeValeur: 1700 + Math.round(Math.random()*1300)},
+        'Nathan':{prospects:Math.floor(48*f), ventes:Math.floor(13*f), ca:Math.floor(52000*f), objectif:85000, margeValeur: 1600 + Math.round(Math.random()*1400)}
+      };
+    }
+    updateTabContent('vue-ensemble'); showNotification('Données de démonstration générées !');
+  }
+}
 
-                html += `
-                    <div class="metric">
-                        <span>${vendeur}</span>
-                        <span class="evolution-indicator evolution-${evolution.type}">
-                            ${evolution.type === 'up' ? '↗' : evolution.type === 'down' ? '↘' : '→'} ${evolution.text}
-                        </span>
-                    </div>
-                `;
-            }
-
-            container.innerHTML = html;
-        }
-
-        function updatePerformance() {
-            const container = document.getElementById('performance-content');
-            const donneesActuelles = getDonneesActuelles();
-            let html = '';
-
-            for (let vendeur in donneesActuelles) {
-                const data = donneesActuelles[vendeur];
-                const progression = data.objectif > 0 ? (data.ca / data.objectif * 100) : 0;
-                const status = progression >= 100 ? 'positive' : progression >= 75 ? 'neutral' : 'negative';
-                const icon = progression >= 100 ? '🎯' : progression >= 75 ? '📈' : '⚠️';
-
-                html += `
-                    <div class="metric">
-                        <span>${icon} ${vendeur}</span>
-                        <span class="metric-value ${status}">${progression.toFixed(1)}%</span>
-                    </div>
-                `;
-            }
-
-            container.innerHTML = html;
-        }
-
-        function updateChartEvolution() {
-            const chart = document.getElementById('chart-evolution');
-            let html = '';
-            
-            // Récupérer les 6 derniers mois
-            const moisData = [];
-            for (let i = 5; i >= 0; i--) {
-                let mois = moisActuel - i;
-                let annee = anneeActuelle;
-                
-                if (mois < 0) {
-                    mois += 12;
-                    annee--;
-                }
-                
-                const key = `${annee}-${mois}`;
-                const donnees = donneesParMois[key] || {};
-                let totalCA = 0;
-                
-                for (let vendeur in donnees) {
-                    totalCA += donnees[vendeur]?.ca || 0;
-                }
-                
-                moisData.push({
-                    mois: MOIS_NOMS[mois].substring(0, 3),
-                    ca: totalCA,
-                    isActuel: mois === moisActuel && annee === anneeActuelle
-                });
-            }
-            
-            const maxCA = Math.max(...moisData.map(m => m.ca));
-            
-            moisData.forEach(({mois, ca, isActuel}) => {
-                const height = maxCA > 0 ? Math.max(30, (ca / maxCA) * 160) : 30;
-                
-                html += `
-                    <div class="bar-group">
-                        <div class="bar" style="
-                            height: ${height}px; 
-                            background: ${isActuel ? 'linear-gradient(to top, #667eea, #764ba2)' : 'linear-gradient(to top, #48bb78, #38a169)'};
-                            ${isActuel ? 'box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);' : ''}
-                        ">
-                            <div class="bar-value">${(ca/1000).toFixed(0)}k€</div>
-                        </div>
-                        <div class="bar-label" style="font-weight: ${isActuel ? 'bold' : 'normal'};">${mois}</div>
-                    </div>
-                `;
-            });
-            
-            chart.innerHTML = html;
-        }
-
-        // Notification
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => notification.classList.add('show'), 100);
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => document.body.removeChild(notification), 300);
-            }, 3000);
-        }
-
-        // Sauvegarde des données
-        function sauvegarderDonnees() {
-            const vendeur = document.getElementById('vendeur-select').value;
-            const prospects = parseInt(document.getElementById('prospects-input').value) || 0;
-            const ventes = parseInt(document.getElementById('ventes-input').value) || 0;
-            const ca = parseInt(document.getElementById('ca-input').value) || 0;
-
-            if (prospects === 0 && ventes === 0 && ca === 0) {
-                showNotification('Veuillez saisir au moins une valeur', 'warning');
-                return;
-            }
-
-            if (ventes > prospects && prospects > 0) {
-                showNotification('Erreur : les ventes ne peuvent pas dépasser les prospects', 'warning');
-                return;
-            }
-
-            // Mise à jour des données du mois actuel
-            const donneesActuelles = getDonneesActuelles();
-            donneesActuelles[vendeur].prospects += prospects;
-            donneesActuelles[vendeur].ventes += ventes;
-            donneesActuelles[vendeur].ca += ca;
-
-            // Réinitialiser le formulaire
-            document.getElementById('prospects-input').value = '';
-            document.getElementById('ventes-input').value = '';
-            document.getElementById('ca-input').value = '';
-
-            showNotification(`Données sauvegardées pour ${vendeur} (${MOIS_NOMS[moisActuel]})`);
-            
-            // Mettre à jour l'affichage selon l'onglet actif
-            const activeTab = document.querySelector('.tab.active');
-            if (activeTab) {
-                const tabName = activeTab.textContent.includes('ensemble') ? 'vue-ensemble' :
-                               activeTab.textContent.includes('Vendeurs') ? 'vendeurs' :
-                               activeTab.textContent.includes('Annuelle') ? 'vue-annuelle' :
-                               activeTab.textContent.includes('Comparatif') ? 'comparatif' : 'saisie';
-                updateTabContent(tabName);
-            }
-        }
-
-        // Export des données
-        function exporterDonnees() {
-            const dataToExport = {
-                donneesParMois: donneesParMois,
-                moisActuel: moisActuel,
-                anneeActuelle: anneeActuelle,
-                dateExport: new Date().toISOString(),
-                version: "2.0"
-            };
-            
-            const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `dashboard-commercial-${anneeActuelle}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            showNotification('Données exportées avec succès !');
-        }
-
-        // Réinitialisations
-        function reinitialiserMois() {
-            if (confirm(`Êtes-vous sûr de vouloir réinitialiser les données de ${MOIS_NOMS[moisActuel]} ${anneeActuelle} ?`)) {
-                const key = getMoisKey();
-                donneesParMois[key] = {
-                    'Vincent': { prospects: 0, ventes: 0, ca: 0, objectif: 80000 },
-                    'Raphael': { prospects: 0, ventes: 0, ca: 0, objectif: 100000 },
-                    'Léo': { prospects: 0, ventes: 0, ca: 0, objectif: 75000 },
-                    'Pablo': { prospects: 0, ventes: 0, ca: 0, objectif: 90000 },
-                    'Nathan': { prospects: 0, ventes: 0, ca: 0, objectif: 85000 }
-                };
-                
-                updateTabContent('vue-ensemble');
-                showNotification(`Données de ${MOIS_NOMS[moisActuel]} réinitialisées`, 'warning');
-            }
-        }
-
-        function reinitialiserTout() {
-            if (confirm('⚠️ ATTENTION : Cette action supprimera TOUTES les données de TOUS les mois. Êtes-vous absolument certain ?')) {
-                donneesParMois = {};
-                initialiserDonnees();
-                updateTabContent('vue-ensemble');
-                showNotification('Toutes les données ont été supprimées', 'warning');
-            }
-        }
-
-        // Génération de données de démonstration
-        function genererDonneesDemonstration() {
-            if (confirm('Générer des données de démonstration pour les 6 derniers mois ?')) {
-                for (let i = 5; i >= 0; i--) {
-                    let mois = moisActuel - i;
-                    let annee = anneeActuelle;
-                    
-                    if (mois < 0) {
-                        mois += 12;
-                        annee--;
-                    }
-                    
-                    const key = `${annee}-${mois}`;
-                    const facteur = 0.7 + Math.random() * 0.6; // Variation réaliste
-                    
-                    donneesParMois[key] = {
-                        'Vincent': { 
-                            prospects: Math.floor(50 * facteur), 
-                            ventes: Math.floor(12 * facteur), 
-                            ca: Math.floor(45000 * facteur), 
-                            objectif: 80000 
-                        },
-                        'Raphael': { 
-                            prospects: Math.floor(60 * facteur), 
-                            ventes: Math.floor(18 * facteur), 
-                            ca: Math.floor(75000 * facteur), 
-                            objectif: 100000 
-                        },
-                        'Léo': { 
-                            prospects: Math.floor(45 * facteur), 
-                            ventes: Math.floor(10 * facteur), 
-                            ca: Math.floor(35000 * facteur), 
-                            objectif: 75000 
-                        },
-                        'Pablo': { 
-                            prospects: Math.floor(55 * facteur), 
-                            ventes: Math.floor(15 * facteur), 
-                            ca: Math.floor(60000 * facteur), 
-                            objectif: 90000 
-                        },
-                        'Nathan': { 
-                            prospects: Math.floor(48 * facteur), 
-                            ventes: Math.floor(13 * facteur), 
-                            ca: Math.floor(52000 * facteur), 
-                            objectif: 85000 
-                        }
-                    };
-                }
-                
-                updateTabContent('vue-ensemble');
-                showNotification('Données de démonstration générées !');
-            }
-        }
-
-        // Initialisation au chargement
-        document.addEventListener('DOMContentLoaded', function() {
-            initialiserDonnees();
-            updateMoisAffichage();
-            updateVueEnsemble();
-            showNotification('Dashboard Pro chargé ! 🚀');
-        });
-    </script>
+// === Init ===
+document.addEventListener('DOMContentLoaded', function(){
+  initialiserDonnees(); updateMoisAffichage(); updateVueEnsemble(); updateSaisieFields(); showNotification('Dashboard Pro chargé ! 🚀');
+});
+</script>
 </body>
 </html>
