@@ -283,6 +283,9 @@
 </div>
 
 <script>
+  // Détermine l'espace de données (dataset) depuis l'URL : ?d=...
+const DATASET = new URLSearchParams(location.search).get('d') || 'default';
+
 // === Configuration initiale ===
 const MOIS_NOMS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 let moisActuel = new Date().getMonth();
