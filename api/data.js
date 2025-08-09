@@ -1,10 +1,12 @@
+// api/data.js
 import { put, get } from '@vercel/blob';
 
-export const config = { runtime: 'nodejs' };
+export const config = { runtime: 'nodejs' }; // <-- IMPORTANT: éviter Edge pour @vercel/blob
 
 function pickKey(req) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const d = url.searchParams.get('d') || 'default';
+  // Un fichier JSON par dataset
   return `suivi-commercial-${d}.json`;
 }
 
@@ -15,6 +17,7 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const blob = await get(key);
       if (!blob) {
+        // Pas encore de données pour ce dataset
         return res.status(200).json({ donneesParMois: {}, version: 'blob-1' });
       }
       const data = await fetch(blob.url).then(r => r.json());
@@ -22,10 +25,18 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
+      // Lecture corps brut
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
       const payload = Buffer.concat(chunks).toString();
-      await put(key, payload, { contentType: 'application/json', access: 'public' });
+
+      // On stocke tel quel (JSON string)
+      await put(key, payload, {
+        access: 'public',
+        contentType: 'application/json',
+        addRandomSuffix: false // pour garder le même nom de fichier
+      });
+
       return res.status(200).json({ ok: true });
     }
 
