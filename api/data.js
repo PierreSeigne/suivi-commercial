@@ -1,5 +1,5 @@
-// Runtime Node (Serverless) — compatible avec @vercel/blob
-export const config = { runtime: 'nodejs18.x' };
+// Runtime Node (Serverless)
+export const config = { runtime: 'nodejs' };
 
 import { put } from '@vercel/blob';
 
@@ -15,9 +15,10 @@ export default async function handler(req, res) {
         res.setHeader('content-type', 'application/json');
         return res.status(200).send(text);
       }
-      // Première réponse si le fichier n’existe pas encore
       res.setHeader('content-type', 'application/json');
-      return res.status(200).send(JSON.stringify({ donneesParMois: {}, version: 'init' }));
+      return res
+        .status(200)
+        .send(JSON.stringify({ donneesParMois: {}, version: 'init' }));
     } catch (e) {
       return res.status(500).json({ ok: false, error: String(e) });
     }
@@ -25,7 +26,6 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      // Lire le body brut (sans dépendances)
       const raw = await new Promise((resolve, reject) => {
         let data = '';
         req.on('data', chunk => (data += chunk));
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
         access: 'public',
         contentType: 'application/json',
         addRandomSuffix: false,
-        token: process.env.BLOB_READ_WRITE_TOKEN
+        token: process.env.BLOB_READ_WRITE_TOKEN,
       });
 
       res.setHeader('content-type', 'application/json');
