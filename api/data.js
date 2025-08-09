@@ -1,53 +1,38 @@
-// Runtime Node (Serverless)
+import { put, get } from '@vercel/blob';
+
 export const config = { runtime: 'nodejs' };
 
-import { put } from '@vercel/blob';
+function pickKey(req) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const d = url.searchParams.get('d') || 'default';
+  return `suivi-commercial-${d}.json`;
+}
 
 export default async function handler(req, res) {
-  const pathname = 'suivi-commercial/data.json';
+  try {
+    const key = pickKey(req);
 
-  if (req.method === 'GET') {
-    try {
-      const url = `https://blob.vercel-storage.com/${pathname}`;
-      const r = await fetch(url);
-      if (r.ok) {
-        const text = await r.text();
-        res.setHeader('content-type', 'application/json');
-        return res.status(200).send(text);
+    if (req.method === 'GET') {
+      const blob = await get(key);
+      if (!blob) {
+        return res.status(200).json({ donneesParMois: {}, version: 'blob-1' });
       }
-      res.setHeader('content-type', 'application/json');
-      return res
-        .status(200)
-        .send(JSON.stringify({ donneesParMois: {}, version: 'init' }));
-    } catch (e) {
-      return res.status(500).json({ ok: false, error: String(e) });
+      const data = await fetch(blob.url).then(r => r.json());
+      return res.status(200).json(data);
     }
-  }
 
-  if (req.method === 'POST') {
-    try {
-      const raw = await new Promise((resolve, reject) => {
-        let data = '';
-        req.on('data', chunk => (data += chunk));
-        req.on('end', () => resolve(data));
-        req.on('error', reject);
-      });
-      const json = raw ? JSON.parse(raw) : {};
-
-      const { url } = await put(pathname, JSON.stringify(json), {
-        access: 'public',
-        contentType: 'application/json',
-        addRandomSuffix: false,
-        token: process.env.BLOB_READ_WRITE_TOKEN,
-      });
-
-      res.setHeader('content-type', 'application/json');
-      return res.status(200).send(JSON.stringify({ ok: true, url }));
-    } catch (e) {
-      return res.status(400).json({ ok: false, error: String(e) });
+    if (req.method === 'POST') {
+      const chunks = [];
+      for await (const chunk of req) chunks.push(chunk);
+      const payload = Buffer.concat(chunks).toString();
+      await put(key, payload, { contentType: 'application/json', access: 'public' });
+      return res.status(200).json({ ok: true });
     }
-  }
 
-  res.setHeader('Allow', 'GET, POST');
-  return res.status(405).send('Method Not Allowed');
+    res.setHeader('Allow', ['GET', 'POST']);
+    return res.status(405).end('Method Not Allowed');
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ ok: false, error: err.message });
+  }
 }
