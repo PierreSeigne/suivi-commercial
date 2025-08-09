@@ -211,12 +211,18 @@
       <div class="card">
         <h3>⚙️ Administration</h3>
         <button class="btn btn-secondary" onclick="exporterDonnees()">📥 Exporter données</button>
+        <button class="btn" onclick="chargerDepuisServeur()">⬇️ Charger depuis serveur</button>
+        <button class="btn" onclick="sauvegarderVersServeur()">⬆️ Sauvegarder vers serveur</button>
+
         <button class="btn btn-warning" onclick="reinitialiserMois()">🔄 Réinitialiser mois</button>
+        <button class="btn" onclick="chargerDepuisServeur()">⬇️ Charger depuis serveur</button>
+        <button class="btn" onclick="sauvegarderVersServeur()">⬆️ Sauvegarder vers serveur</button>
+
         <button class="btn btn-warning" onclick="reinitialiserTout()">🗑️ Tout effacer</button>
-        <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-radius: 8px;">
-          <h4 style="margin-bottom: 10px;">📋 Actions rapides :</h4>
-          <button class="btn btn-secondary" onclick="genererDonneesDemonstration()">🎭 Données démo</button>
-        </div>
+        <button class="btn" onclick="chargerDepuisServeur()">⬇️ Charger depuis serveur</button>
+        <button class="btn" onclick="sauvegarderVersServeur()">⬆️ Sauvegarder vers serveur</button>
+
+    
       </div>
     </div>
   </div>
@@ -667,6 +673,64 @@ function genererDonneesDemonstration(){
     updateTabContent('vue-ensemble'); showNotification('Données de démonstration générées !');
   }
 }
+// === Synchronisation serveur (Vercel Blob via /api/data) ===
+async function chargerDepuisServeur() {
+  try {
+    const res = await fetch(`/api/data?d=${encodeURIComponent(DATASET)}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    if (data && data.donneesParMois) {
+      // Hydrate l'état global
+      donneesParMois = data.donneesParMois;
+      if (typeof data.moisActuel === 'number') moisActuel = data.moisActuel;
+      if (typeof data.anneeActuelle === 'number') anneeActuelle = data.anneeActuelle;
+
+      // Rafraîchis l'UI
+      updateMoisAffichage();
+      // Retrouve l'onglet actif comme tu le fais ailleurs
+      const activeTab = document.querySelector('.tab.active');
+      if (activeTab) {
+        const tabName = activeTab.getAttribute('onclick').match(/'(.*?)'/)[1];
+        updateTabContent(tabName);
+      } else {
+        updateVueEnsemble();
+      }
+      updateSaisieFields?.();
+
+      showNotification(`✅ Données chargées pour "${DATASET}"`);
+    } else {
+      showNotification(`ℹ️ Aucune donnée pour "${DATASET}"`, 'warning');
+    }
+  } catch (e) {
+    console.error(e);
+    showNotification('❌ Erreur de chargement', 'warning');
+  }
+}
+
+async function sauvegarderVersServeur() {
+  try {
+    const payload = {
+      donneesParMois,
+      moisActuel,
+      anneeActuelle,
+      dateExport: new Date().toISOString(),
+      version: 'blob-1'
+    };
+    const res = await fetch(`/api/data?d=${encodeURIComponent(DATASET)}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    showNotification(`✅ Données sauvegardées pour "${DATASET}"`);
+  } catch (e) {
+    console.error(e);
+    showNotification('❌ Erreur de sauvegarde', 'warning');
+  }
+}
+// Auto-chargement si un dataset est fourni dans l'URL
+if (DATASET) { chargerDepuisServeur(); }
 
 // === Init ===
 document.addEventListener('DOMContentLoaded', function(){
