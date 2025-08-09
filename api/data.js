@@ -1,41 +1,53 @@
-export const config = { runtime: 'edge' };
+// Runtime Node (Serverless) — compatible avec @vercel/blob
+export const config = { runtime: 'nodejs18.x' };
 
-export default async function handler(req) {
+import { put } from '@vercel/blob';
+
+export default async function handler(req, res) {
   const pathname = 'suivi-commercial/data.json';
-  const { put } = await import('@vercel/blob');
 
   if (req.method === 'GET') {
-    const url = `https://blob.vercel-storage.com/${pathname}`;
-    const res = await fetch(url);
-    if (res.ok) {
-      const text = await res.text();
-      return new Response(text, { headers: { 'content-type': 'application/json' } });
+    try {
+      const url = `https://blob.vercel-storage.com/${pathname}`;
+      const r = await fetch(url);
+      if (r.ok) {
+        const text = await r.text();
+        res.setHeader('content-type', 'application/json');
+        return res.status(200).send(text);
+      }
+      // Première réponse si le fichier n’existe pas encore
+      res.setHeader('content-type', 'application/json');
+      return res.status(200).send(JSON.stringify({ donneesParMois: {}, version: 'init' }));
+    } catch (e) {
+      return res.status(500).json({ ok: false, error: String(e) });
     }
-    // Première fois : renvoyer un objet vide
-    return new Response(JSON.stringify({ donneesParMois: {}, version: 'init' }), {
-      headers: { 'content-type': 'application/json' }
-    });
   }
 
   if (req.method === 'POST') {
     try {
-      const body = await req.json();
-      const { url } = await put(pathname, JSON.stringify(body), {
+      // Lire le body brut (sans dépendances)
+      const raw = await new Promise((resolve, reject) => {
+        let data = '';
+        req.on('data', chunk => (data += chunk));
+        req.on('end', () => resolve(data));
+        req.on('error', reject);
+      });
+      const json = raw ? JSON.parse(raw) : {};
+
+      const { url } = await put(pathname, JSON.stringify(json), {
         access: 'public',
         contentType: 'application/json',
         addRandomSuffix: false,
         token: process.env.BLOB_READ_WRITE_TOKEN
       });
-      return new Response(JSON.stringify({ ok: true, url }), {
-        headers: { 'content-type': 'application/json' }
-      });
+
+      res.setHeader('content-type', 'application/json');
+      return res.status(200).send(JSON.stringify({ ok: true, url }));
     } catch (e) {
-      return new Response(JSON.stringify({ ok: false, error: String(e) }), {
-        status: 400,
-        headers: { 'content-type': 'application/json' }
-      });
+      return res.status(400).json({ ok: false, error: String(e) });
     }
   }
 
-  return new Response('Method Not Allowed', { status: 405 });
+  res.setHeader('Allow', 'GET, POST');
+  return res.status(405).send('Method Not Allowed');
 }
