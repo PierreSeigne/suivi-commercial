@@ -1,4 +1,7 @@
 // api/data.js
+
+export const config = { runtime: 'nodejs' };
+
 import { put, get } from '@vercel/blob';
 
 export const config = { runtime: 'nodejs' }; // <-- IMPORTANT: éviter Edge pour @vercel/blob
