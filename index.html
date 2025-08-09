@@ -208,22 +208,16 @@
         <button class="btn" onclick="sauvegarderDonnees()">💾 Sauvegarder</button>
       </div>
 
-      <div class="card">
-        <h3>⚙️ Administration</h3>
-        <button class="btn btn-secondary" onclick="exporterDonnees()">📥 Exporter données</button>
-        <button class="btn" onclick="chargerDepuisServeur()">⬇️ Charger depuis serveur</button>
-        <button class="btn" onclick="sauvegarderVersServeur()">⬆️ Sauvegarder vers serveur</button>
+     <div class="card">
+  <h3>⚙️ Administration</h3>
+  <button class="btn btn-secondary" onclick="exporterDonnees()">📥 Exporter données</button>
+  <button class="btn" onclick="chargerDepuisServeur()">⬇️ Charger depuis serveur</button>
+  <button class="btn" onclick="sauvegarderVersServeur()">⬆️ Sauvegarder vers serveur</button>
+  <button class="btn btn-warning" onclick="reinitialiserMois()">🔄 Réinitialiser mois</button>
+  <button class="btn btn-warning" onclick="reinitialiserTout()">🗑️ Tout effacer</button>
 
-        <button class="btn btn-warning" onclick="reinitialiserMois()">🔄 Réinitialiser mois</button>
-        <button class="btn" onclick="chargerDepuisServeur()">⬇️ Charger depuis serveur</button>
-        <button class="btn" onclick="sauvegarderVersServeur()">⬆️ Sauvegarder vers serveur</button>
-
-        <button class="btn btn-warning" onclick="reinitialiserTout()">🗑️ Tout effacer</button>
-        <button class="btn" onclick="chargerDepuisServeur()">⬇️ Charger depuis serveur</button>
-        <button class="btn" onclick="sauvegarderVersServeur()">⬆️ Sauvegarder vers serveur</button>
-
-    
-      </div>
+  
+</div>
     </div>
   </div>
 
@@ -309,7 +303,12 @@ function vendeurDefaults(){
 }
 
 function getMoisKey(mois=moisActuel, annee=anneeActuelle){ return `${annee}-${mois}`; }
-function getDonneesActuelles(){ return donneesParMois[getMoisKey()]; }
+
+function getDonneesActuelles(){
+  const key = getMoisKey();
+  if (!donneesParMois[key]) donneesParMois[key] = vendeurDefaults();
+  return donneesParMois[key];
+}
 
 function initialiserDonnees(){
   for(let mois=0; mois<12; mois++){
@@ -730,7 +729,15 @@ async function sauvegarderVersServeur() {
   }
 }
 // Auto-chargement si un dataset est fourni dans l'URL
-if (DATASET) { chargerDepuisServeur(); }
+document.addEventListener('DOMContentLoaded', function(){
+  initialiserDonnees();
+  updateMoisAffichage();
+  updateVueEnsemble();
+  updateSaisieFields();
+  // Auto-chargement après init (si ?d=...)
+  if (DATASET) { chargerDepuisServeur(); }
+  showNotification('Dashboard Pro chargé ! 🚀');
+});
 
 // === Init ===
 document.addEventListener('DOMContentLoaded', function(){
