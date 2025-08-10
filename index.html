@@ -376,6 +376,15 @@
     </div>
   </div>
 <script>
+
+forecastFromHistory()
+calculateWeeklyTrend()
+calculateWeightedAverage()
+calculateSeasonalityFactor()
+calculateDataQuality()
+getMainAlgorithm()
+calculateHistoricalConversionRate()
+calculateProspectionQuality()
   // Détermine l'espace de données (dataset) depuis l'URL : ?d=...
 const DATASET = new URLSearchParams(location.search).get('d') || 'default';
 
@@ -593,7 +602,7 @@ function updateVueAnnuelle(){
 function somme(obj, fn){ let s=0; for(const v in obj){ s += fn(obj[v]); } return s; }
 function moyenne(a,b){ return b>0 ? a/b : 0; }
 
-function forecastCA(){
+function forecastCAAdvanced()(){
   // Prévision simple: moyenne des 3 derniers mois + pondération du réalisé courant
   const points=[]; for(let i=3;i>=1;i--){ let m=moisActuel-i; let a=anneeActuelle; if(m<0){ m+=12; a--; }
     const key=`${a}-${m}`; const d=donneesParMois[key]||{}; points.push(somme(d, x=>x.ca)); }
@@ -602,7 +611,7 @@ function forecastCA(){
   return Math.round(0.6*avg3 + 0.4*courant); // pondération douce
 }
 
-function forecastVentes(){
+function forecastVentesAdvanced(){
   const d = getDonneesActuelles(); const ventes = somme(d, x=>x.ventes); const prospects = somme(d, x=>x.prospects);
   const tauxActuel = moyenne(ventes, prospects); // en ratio 0..1
   const cible = Math.max(tauxActuel, 0.22); // cible mini 22%
@@ -610,7 +619,7 @@ function forecastVentes(){
   return { ventesPrev, tauxPrev: cible*100 };
 }
 
-function buildSuggestions(){
+function  buildAdvancedSuggestions(){
   const d = getDonneesActuelles();
   const suggestions=[];
   for(const v in d){ const x=d[v]; const taux = x.prospects>0?(x.ventes/x.prospects):0; const tauxPct=(taux*100).toFixed(1);
@@ -635,8 +644,8 @@ function updateIATab(){
   document.getElementById('label-seuil-marge').textContent = seuil.toLocaleString();
 
   // Prévisions
-  const prevCA = forecastCA();
-  const { ventesPrev, tauxPrev } = forecastVentes();
+  const prevCA =  forecastCAAdvanced();
+  const { ventesPrev, tauxPrev } = forecastVentesAdvanced();
   document.getElementById('ia-prev-ca').textContent = prevCA.toLocaleString()+' €';
   document.getElementById('ia-prev-ventes').textContent = ventesPrev.toString();
   document.getElementById('ia-prev-taux').textContent = tauxPrev.toFixed(1)+'%';
@@ -649,7 +658,7 @@ function updateIATab(){
   document.getElementById('ia-prev-ventes-trend').innerHTML = `<span class="evolution-indicator evolution-${tV.type}">${tV.type==='up'?'↗':'↘'} ${tV.text}</span>`;
 
   // Recos
-  const sug = buildSuggestions();
+  const sug =  buildAdvancedSuggestions();
   const sugEl = document.getElementById('ia-suggestions');
   let html='';
   sug.forEach(({v,items})=>{
