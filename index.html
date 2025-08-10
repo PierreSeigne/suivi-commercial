@@ -72,6 +72,10 @@
       .overview-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
       .cards-grid { grid-template-columns: 1fr; }
     }
+    @keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
   </style>
 </head>
 <body>
@@ -86,13 +90,14 @@
   </div>
 
   <div class="tabs">
-    <button class="tab active" onclick="showTab(event, 'vue-ensemble')">📈 Vue d'ensemble</button>
-    <button class="tab" onclick="showTab(event, 'vendeurs')">👥 Vendeurs</button>
-    <button class="tab" onclick="showTab(event, 'vue-annuelle')">🗓️ Vue Annuelle</button>
-    <button class="tab" onclick="showTab(event, 'comparatif')">📊 Comparatif</button>
-    <button class="tab" onclick="showTab(event, 'saisie')">✏️ Saisie</button>
-    <button class="tab" onclick="showTab(event, 'ia')">🤖 Prédiction IA</button>
-  </div>
+  <button class="tab active" onclick="showTab(event, 'vue-ensemble')">📈 Vue d'ensemble</button>
+  <button class="tab" onclick="showTab(event, 'vendeurs')">👥 Vendeurs</button>
+  <button class="tab" onclick="showTab(event, 'vue-annuelle')">🗓️ Vue Annuelle</button>
+  <button class="tab" onclick="showTab(event, 'comparatif')">📊 Comparatif</button>
+  <button class="tab" onclick="showTab(event, 'saisie')">✏️ Saisie</button>
+  <button class="tab" onclick="showTab(event, 'ia')">🤖 Prédiction IA</button>
+  <button class="tab" onclick="showTab(event, 'warroom')">🚨 War Room</button>
+</div>
 
   <!-- Vue d'ensemble -->
   <div id="vue-ensemble" class="tab-content active">
@@ -281,7 +286,95 @@
     </div>
   </div>
 </div>
+<!-- War Room -->
+  <div id="warroom" class="tab-content">
+    <!-- Header War Room -->
+    <div class="card" style="background: linear-gradient(135deg, #1a1a2e, #16213e); border: 2px solid #667eea; margin-bottom: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <span style="font-size: 2rem;">⚡</span>
+          <h2 style="color: #667eea; margin: 0; font-size: 1.8rem;">War Room Commercial</h2>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 8px; height: 8px; background: #48bb78; border-radius: 50%; animation: pulse 2s infinite;"></div>
+            <span style="font-size: 0.9rem; color: #a0aec0;">Temps réel</span>
+          </div>
+        </div>
+        <button class="btn" onclick="chargerDepuisServeur()" style="padding: 10px 20px;">
+          🔄 Actualiser
+        </button>
+      </div>
+      
+      <!-- KPIs Globaux -->
+      <div class="overview-grid" style="margin-bottom: 0;">
+        <div class="overview-card" style="background: rgba(255,255,255,0.1); color: white;">
+          <h3 style="color: #a0aec0;">Vendeurs Actifs</h3>
+          <div class="value" id="war-vendeurs-actifs">5</div>
+        </div>
+        <div class="overview-card" style="background: rgba(255,255,255,0.1); color: white;">
+          <h3 style="color: #a0aec0;">Alertes Critiques</h3>
+          <div class="value" style="color: #f56565;" id="war-alertes-critiques">0</div>
+        </div>
+        <div class="overview-card" style="background: rgba(255,255,255,0.1); color: white;">
+          <h3 style="color: #a0aec0;">Taux Équipe</h3>
+          <div class="value" id="war-taux-equipe">0%</div>
+        </div>
+        <div class="overview-card" style="background: rgba(255,255,255,0.1); color: white;">
+          <h3 style="color: #a0aec0;">CA Équipe</h3>
+          <div class="value" id="war-ca-equipe">0k€</div>
+        </div>
+      </div>
+    </div>
 
+    <!-- Alertes Critiques -->
+    <div class="card" id="war-alertes-container" style="display: none; margin-bottom: 20px;">
+      <h3 style="color: #f56565; display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+        ⚠️ Alertes Prioritaires
+      </h3>
+      <div id="war-alertes-liste"></div>
+    </div>
+
+    <!-- Tableau Vendeurs -->
+    <div class="card" style="margin-bottom: 20px;">
+      <h3 style="color: #667eea; display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+        🧠 Analyses Prédictives par Vendeur
+      </h3>
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background: rgba(102, 126, 234, 0.1);">
+              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #667eea;">Vendeur</th>
+              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #667eea;">Performance</th>
+              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #667eea;">Prédictions</th>
+              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #667eea;">Actions IA</th>
+              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #667eea;">Statut</th>
+            </tr>
+          </thead>
+          <tbody id="war-tableau-vendeurs"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Actions du Jour -->
+    <div class="cards-grid">
+      <div class="card">
+        <h3 style="color: #48bb78; display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+          🎯 Actions Prioritaires Aujourd'hui
+        </h3>
+        <div id="war-actions-prioritaires"></div>
+      </div>
+      
+      <div class="card">
+        <h3 style="color: #667eea; display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+          🧠 Insights IA du Mois
+        </h3>
+        <div id="war-insights" style="display: flex; flex-direction: column; gap: 12px;"></div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px; font-size: 0.8rem; color: #a0aec0;">
+      Dernière mise à jour : <span id="war-last-update">--</span>
+    </div>
+  </div>
 <script>
   // Détermine l'espace de données (dataset) depuis l'URL : ?d=...
 const DATASET = new URLSearchParams(location.search).get('d') || 'default';
@@ -368,6 +461,7 @@ function updateTabContent(tabName){
     case 'comparatif': updateComparatif(); break;
     case 'ia': updateIATab(); break;
     case 'saisie': updateSaisieFields(); break;
+    case 'warroom': updateWarRoom(); break;  // <- AJOUTER CETTE LIGNE
   }
 }
 
@@ -727,6 +821,242 @@ async function sauvegarderVersServeur() {
     console.error(e);
     showNotification('❌ Erreur de sauvegarde', 'warning');
   }
+}
+  // === WAR ROOM FUNCTIONS ===
+
+function updateWarRoom() {
+  const d = getDonneesActuelles();
+  const vendeurs = Object.keys(d);
+  let alertes = [];
+  let metriques = [];
+  
+  // Calculer métriques par vendeur
+  vendeurs.forEach(vendeur => {
+    const donnees = d[vendeur] || {};
+    const rdv = donnees.prospects || 0;
+    const ventes = donnees.ventes || 0;
+    const ca = donnees.ca || 0;
+    const marge = donnees.margeValeur || 2000;
+    const objectif = donnees.objectif || 30000;
+    
+    const tauxConversion = rdv > 0 ? (ventes / rdv) * 100 : 0;
+    const margeMoyenne = ventes > 0 ? ca / ventes : 0;
+    
+    // Prédiction simple
+    const joursEcoules = new Date().getDate();
+    const joursRestants = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - joursEcoules;
+    const previsionCA = ca + (ca / Math.max(1, joursEcoules) * joursRestants);
+    
+    // Calcul du risque
+    let risqueObjectif = 'faible';
+    const progressionObjectif = (ca / objectif) * 100;
+    if (progressionObjectif < 50) risqueObjectif = 'élevé';
+    else if (progressionObjectif < 75) risqueObjectif = 'moyen';
+    
+    metriques.push({
+      nom: vendeur,
+      rdv,
+      ventes,
+      ca,
+      margeMoyenne,
+      objectif,
+      tauxConversion,
+      previsionCA,
+      risqueObjectif,
+      progressionObjectif
+    });
+
+    // Génération des alertes
+    if (margeMoyenne < 2000 && ventes > 0) {
+      alertes.push({
+        type: 'marge',
+        vendeur: vendeur,
+        severite: 'critique',
+        message: `Marge moyenne ${Math.round(margeMoyenne)}€ < 2000€`,
+        action: 'Formation pricing / Qualification prospects'
+      });
+    }
+
+    if (tauxConversion < 50 && rdv > 5) {
+      alertes.push({
+        type: 'conversion',
+        vendeur: vendeur,
+        severite: tauxConversion < 30 ? 'critique' : 'warning',
+        message: `Taux conversion ${tauxConversion.toFixed(1)}% < 50%`,
+        action: 'Coaching closing / Scripts objections'
+      });
+    }
+
+    if (risqueObjectif === 'élevé') {
+      alertes.push({
+        type: 'objectif',
+        vendeur: vendeur,
+        severite: 'critique',
+        message: `Risque élevé de ne pas atteindre l'objectif (${progressionObjectif.toFixed(0)}%)`,
+        action: 'Plan d\'action urgent requis'
+      });
+    }
+  });
+
+  // Mise à jour des KPIs globaux
+  const vendeursActifs = metriques.filter(v => v.rdv > 0).length;
+  const moyenneTaux = metriques.reduce((acc, v) => acc + v.tauxConversion, 0) / metriques.length;
+  const caTotal = metriques.reduce((acc, v) => acc + v.ca, 0);
+  
+  document.getElementById('war-vendeurs-actifs').textContent = vendeursActifs;
+  document.getElementById('war-alertes-critiques').textContent = alertes.length;
+  document.getElementById('war-taux-equipe').textContent = moyenneTaux.toFixed(1) + '%';
+  document.getElementById('war-ca-equipe').textContent = (caTotal / 1000).toFixed(0) + 'k€';
+
+  // Affichage des alertes
+  const alertesContainer = document.getElementById('war-alertes-container');
+  const alertesListe = document.getElementById('war-alertes-liste');
+  
+  if (alertes.length > 0) {
+    alertesContainer.style.display = 'block';
+    let html = '';
+    alertes.slice(0, 5).forEach(alerte => {
+      const couleur = alerte.severite === 'critique' ? '#f56565' : '#ed8936';
+      html += `
+        <div style="background: rgba(245,101,101,0.1); border-left: 4px solid ${couleur}; padding: 15px; margin-bottom: 10px; border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+            <span style="width: 8px; height: 8px; background: ${couleur}; border-radius: 50%;"></span>
+            <strong>${alerte.vendeur}</strong>
+            <span style="color: #666;">•</span>
+            <span>${alerte.message}</span>
+          </div>
+          <div style="color: #667eea; font-size: 0.9rem;">💡 ${alerte.action}</div>
+        </div>
+      `;
+    });
+    alertesListe.innerHTML = html;
+  } else {
+    alertesContainer.style.display = 'none';
+  }
+
+  // Tableau des vendeurs
+  const tableauBody = document.getElementById('war-tableau-vendeurs');
+  let tableauHtml = '';
+  
+  metriques.forEach(vendeur => {
+    const joursRestants = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate();
+    const rdvNecessaires = Math.ceil((vendeur.objectif - vendeur.ca) / (vendeur.margeMoyenne * (vendeur.tauxConversion / 100)));
+    const rdvParJour = Math.max(0, rdvNecessaires / Math.max(1, joursRestants));
+    const probabiliteObjectif = Math.min(100, Math.max(10, (vendeur.previsionCA / vendeur.objectif) * 100));
+
+    // Actions recommandées
+    const actions = [];
+    if (vendeur.margeMoyenne < 2000) actions.push("📈 Prospects premium");
+    if (vendeur.tauxConversion < 50) actions.push("🎯 Améliorer closing");
+    if (vendeur.risqueObjectif === 'élevé') actions.push("⚡ Prospection intensive");
+    if (actions.length === 0) actions.push("✅ Maintenir cadence");
+
+    const couleurStatut = vendeur.risqueObjectif === 'faible' ? '#48bb78' : 
+                         vendeur.risqueObjectif === 'moyen' ? '#ed8936' : '#f56565';
+
+    tableauHtml += `
+      <tr style="border-bottom: 1px solid #e2e8f0;">
+        <td style="padding: 15px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 40px; height: 40px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+              ${vendeur.nom[0]}
+            </div>
+            <div>
+              <div style="font-weight: 600;">${vendeur.nom}</div>
+              <div style="font-size: 0.8rem; color: #666;">${vendeur.rdv} RDV • ${vendeur.ventes} ventes</div>
+            </div>
+          </div>
+        </td>
+        <td style="padding: 15px;">
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="color: ${vendeur.tauxConversion >= 50 ? '#48bb78' : '#f56565'};">
+              📊 ${vendeur.tauxConversion.toFixed(1)}%
+            </div>
+            <div style="color: ${vendeur.margeMoyenne >= 2000 ? '#48bb78' : '#f56565'};">
+              💰 ${Math.round(vendeur.margeMoyenne)}€
+            </div>
+          </div>
+        </td>
+        <td style="padding: 15px;">
+          <div style="font-size: 0.9rem;">
+            <div>🎯 ${probabiliteObjectif.toFixed(0)}%</div>
+            <div>📅 ${rdvParJour.toFixed(1)} RDV/j</div>
+            <div>💰 ${vendeur.previsionCA.toLocaleString()}€</div>
+          </div>
+        </td>
+        <td style="padding: 15px;">
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            ${actions.slice(0, 2).map(action => `
+              <div style="background: rgba(102,126,234,0.1); color: #667eea; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">
+                ${action}
+              </div>
+            `).join('')}
+          </div>
+        </td>
+        <td style="padding: 15px;">
+          <div style="background: ${couleurStatut}; color: white; padding: 6px 12px; border-radius: 20px; text-align: center; font-size: 0.8rem; font-weight: 600;">
+            ${vendeur.risqueObjectif.toUpperCase()}
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+  
+  tableauBody.innerHTML = tableauHtml;
+
+  // Actions prioritaires
+  const actionsPrioritaires = document.getElementById('war-actions-prioritaires');
+  if (alertes.length > 0) {
+    let actionsHtml = '';
+    alertes.slice(0, 3).forEach(alerte => {
+      const couleur = alerte.severite === 'critique' ? '#f56565' : '#ed8936';
+      actionsHtml += `
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(245,101,101,0.1); border-radius: 8px; margin-bottom: 8px;">
+          <span style="color: ${couleur};">⚠️</span>
+          <div>
+            <div style="font-weight: 600;">${alerte.vendeur} - ${alerte.type}</div>
+            <div style="font-size: 0.9rem; color: #666;">${alerte.action}</div>
+          </div>
+        </div>
+      `;
+    });
+    actionsPrioritaires.innerHTML = actionsHtml;
+  } else {
+    actionsPrioritaires.innerHTML = `
+      <div style="text-align: center; color: #48bb78; padding: 20px;">
+        ✅ Aucune alerte critique - Équipe performante !
+      </div>
+    `;
+  }
+
+  // Insights IA
+  const insights = document.getElementById('war-insights');
+  const meilleurVendeur = metriques.reduce((best, current) => 
+    current.tauxConversion > best.tauxConversion ? current : best
+  );
+  const vendeursCritiques = metriques.filter(v => 
+    v.margeMoyenne < 2000 || v.tauxConversion < 30 || v.risqueObjectif === 'élevé'
+  );
+  const objectifGlobal = metriques.reduce((acc, v) => acc + v.objectif, 0);
+  const progressionGlobale = ((caTotal / objectifGlobal) * 100).toFixed(1);
+
+  insights.innerHTML = `
+    <div style="padding: 12px; background: rgba(72,187,120,0.1); border-radius: 8px;">
+      <div style="color: #48bb78; font-weight: 600; margin-bottom: 5px;">💡 Meilleur performer</div>
+      <div style="font-size: 0.9rem;">${meilleurVendeur.nom} : ${meilleurVendeur.tauxConversion.toFixed(1)}% de conversion</div>
+    </div>
+    <div style="padding: 12px; background: rgba(237,137,54,0.1); border-radius: 8px;">
+      <div style="color: #ed8936; font-weight: 600; margin-bottom: 5px;">⚠️ Zone d'attention</div>
+      <div style="font-size: 0.9rem;">${vendeursCritiques.length} vendeur(s) nécessitent un suivi rapproché.</div>
+    </div>
+    <div style="padding: 12px; background: rgba(102,126,234,0.1); border-radius: 8px;">
+      <div style="color: #667eea; font-weight: 600; margin-bottom: 5px;">🚀 Objectif équipe</div>
+      <div style="font-size: 0.9rem;">Progression globale : ${progressionGlobale}%</div>
+    </div>
+  `;
+
+  // Mise à jour timestamp
+  document.getElementById('war-last-update').textContent = new Date().toLocaleTimeString();
 }
 // Auto-chargement si un dataset est fourni dans l'URL
 document.addEventListener('DOMContentLoaded', function(){
