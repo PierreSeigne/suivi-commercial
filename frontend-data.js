@@ -1,30 +1,53 @@
-// frontend-data.js - Compatible avec votre API data.js existante
+// frontend-data.js - Compatible avec votre HTML existant
+// Ce fichier remplace la logique localStorage par des appels à votre API Blob
+
+console.log('🚀 Chargement frontend-data.js - Version API Blob');
 
 // Configuration
 const API_ENDPOINT = '/api/data';
-const DEFAULT_KEY = 'default'; // Peut être changé pour avoir plusieurs environnements
+const DATASET = new URLSearchParams(location.search).get('d') || 'default';
+const MOIS_NOMS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
-// Structure des données
-let vendeursData = {
-    Vincent: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 },
-    Raphael: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 },
-    Leo: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 },
-    Pablo: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 },
-    Nathan: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 }
-};
-
-let currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+// Variables globales - compatibles avec votre code existant
+let moisActuel = new Date().getMonth();
+let anneeActuelle = new Date().getFullYear();
+let donneesParMois = {};
 let isLoading = false;
 
-// 📡 Charger les données depuis votre API Blob existante
-async function chargerDonnees(key = DEFAULT_KEY) {
+// Fonction pour obtenir la clé du mois (compatible avec votre code)
+function getMoisKey(mois = moisActuel, annee = anneeActuelle) {
+    return `${annee}-${mois}`;
+}
+
+// Fonction pour obtenir les données actuelles (compatible avec votre code)
+function getDonneesActuelles() {
+    const key = getMoisKey();
+    if (!donneesParMois[key]) {
+        donneesParMois[key] = vendeurDefaults();
+    }
+    return donneesParMois[key];
+}
+
+// Fonction pour les valeurs par défaut (compatible avec votre code)
+function vendeurDefaults() {
+    return {
+        'Vincent': { prospects: 0, ventes: 0, ca: 0, objectif: 80000, margeValeur: 2500 },
+        'Raphael': { prospects: 0, ventes: 0, ca: 0, objectif: 100000, margeValeur: 2600 },
+        'Léo': { prospects: 0, ventes: 0, ca: 0, objectif: 75000, margeValeur: 2200 },
+        'Pablo': { prospects: 0, ventes: 0, ca: 0, objectif: 90000, margeValeur: 2400 },
+        'Nathan': { prospects: 0, ventes: 0, ca: 0, objectif: 85000, margeValeur: 2300 }
+    };
+}
+
+// 📡 NOUVEAU : Charger les données depuis votre API Blob
+async function chargerDepuisServeurAuto() {
     if (isLoading) return;
     isLoading = true;
     
     try {
-        console.log(`📡 Chargement des données (key: ${key})...`);
+        console.log('📡 Chargement automatique depuis API Blob...');
         
-        const response = await fetch(`${API_ENDPOINT}?d=${key}`, {
+        const response = await fetch(`${API_ENDPOINT}?d=${encodeURIComponent(DATASET)}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -36,55 +59,50 @@ async function chargerDonnees(key = DEFAULT_KEY) {
         }
 
         const data = await response.json();
-        console.log('📦 Données reçues:', data);
+        console.log('📦 Données reçues depuis Blob:', data);
         
-        // Adapter les données à votre structure
-        if (data.donneesParMois && data.donneesParMois[currentMonth]) {
-            // Si des données existent pour ce mois
-            vendeursData = data.donneesParMois[currentMonth] || vendeursData;
-            console.log('✅ Données chargées pour le mois:', currentMonth);
+        // Intégrer les données reçues
+        if (data && data.donneesParMois) {
+            donneesParMois = data.donneesParMois;
+            
+            // Mettre à jour les variables globales si présentes
+            if (typeof data.moisActuel === 'number') moisActuel = data.moisActuel;
+            if (typeof data.anneeActuelle === 'number') anneeActuelle = data.anneeActuelle;
+            
+            console.log('✅ Données intégrées depuis le serveur');
         } else {
-            // Première utilisation ou nouveau mois
-            console.log('📝 Aucune donnée pour ce mois, utilisation des valeurs par défaut');
+            console.log('📝 Aucune donnée serveur - utilisation des défauts');
+            initialiserDonnees();
         }
-        
-        mettreAJourInterface();
 
     } catch (error) {
-        console.error('❌ Erreur lors du chargement:', error);
-        // Fallback vers localStorage
-        chargerDepuisLocalStorage();
+        console.error('❌ Erreur lors du chargement auto:', error);
+        // Utiliser les données par défaut en cas d'erreur
+        initialiserDonnees();
     } finally {
         isLoading = false;
     }
 }
 
-// 💾 Sauvegarder les données vers votre API Blob existante
-async function sauvegarderDonnees(key = DEFAULT_KEY) {
+// 💾 NOUVEAU : Sauvegarder automatiquement vers votre API Blob
+async function sauvegarderVersServeurAuto() {
     try {
-        console.log(`💾 Sauvegarde des données (key: ${key})...`);
+        console.log('💾 Sauvegarde automatique vers API Blob...');
         
-        // D'abord, charger les données existantes pour ne pas écraser les autres mois
-        const existingResponse = await fetch(`${API_ENDPOINT}?d=${key}`);
-        let existingData = { donneesParMois: {}, version: 'blob-1' };
-        
-        if (existingResponse.ok) {
-            existingData = await existingResponse.json();
-        }
-        
-        // Mettre à jour seulement le mois actuel
-        existingData.donneesParMois = existingData.donneesParMois || {};
-        existingData.donneesParMois[currentMonth] = vendeursData;
-        existingData.lastUpdate = new Date().toISOString();
-        existingData.version = 'blob-1';
+        const payload = {
+            donneesParMois,
+            moisActuel,
+            anneeActuelle,
+            dateExport: new Date().toISOString(),
+            version: '2.5-blob-integration'
+        };
 
-        // Sauvegarder
-        const response = await fetch(`${API_ENDPOINT}?d=${key}`, {
+        const response = await fetch(`${API_ENDPOINT}?d=${encodeURIComponent(DATASET)}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(existingData)
+            body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
@@ -94,279 +112,222 @@ async function sauvegarderDonnees(key = DEFAULT_KEY) {
         const result = await response.json();
         
         if (result.ok) {
-            console.log('✅ Données sauvegardées sur Vercel Blob');
-            console.log('🔗 URL:', result.url);
-            
-            // Backup local aussi
-            localStorage.setItem('dashboardData', JSON.stringify({
-                donneesParMois: { [currentMonth]: vendeursData },
-                lastUpdate: new Date().toISOString()
-            }));
-            
+            console.log('✅ Sauvegarde automatique réussie');
+            console.log('🔗 URL Blob:', result.url);
             return true;
         } else {
             throw new Error(result.error || 'Erreur de sauvegarde');
         }
 
     } catch (error) {
-        console.error('❌ Erreur lors de la sauvegarde:', error);
-        // Fallback localStorage
-        localStorage.setItem('dashboardData', JSON.stringify({
-            donneesParMois: { [currentMonth]: vendeursData },
-            lastUpdate: new Date().toISOString()
-        }));
+        console.error('❌ Erreur sauvegarde automatique:', error);
         return false;
     }
 }
 
-// 📱 Fallback localStorage (si l'API ne fonctionne pas)
-function chargerDepuisLocalStorage() {
-    const savedData = localStorage.getItem('dashboardData');
-    if (savedData) {
-        try {
-            const data = JSON.parse(savedData);
-            if (data.donneesParMois && data.donneesParMois[currentMonth]) {
-                vendeursData = data.donneesParMois[currentMonth];
-                console.log('📱 Données chargées depuis localStorage (fallback)');
-            }
-        } catch (e) {
-            console.error('Erreur parsing localStorage:', e);
+// Fonction pour initialiser les données (compatible avec votre code)
+function initialiserDonnees() {
+    console.log('🔧 Initialisation des données par défaut');
+    for (let mois = 0; mois < 12; mois++) {
+        const key = `${anneeActuelle}-${mois}`;
+        if (!donneesParMois[key]) {
+            donneesParMois[key] = vendeurDefaults();
         }
     }
-    mettreAJourInterface();
 }
 
-// 🔄 Actualiser les données depuis le serveur
-async function actualiserDonnees() {
-    const boutonActualiser = document.querySelector('[onclick*="actualiser"]');
-    if (boutonActualiser) {
-        const originalText = boutonActualiser.textContent;
-        boutonActualiser.textContent = '🔄 Actualisation...';
-        boutonActualiser.disabled = true;
+// 🔄 MODIFICATION : Votre fonction chargerDepuisServeur existante - avec intégration Blob
+async function chargerDepuisServeur() {
+    console.log('⬇️ Chargement manuel depuis serveur');
+    
+    const originalText = 'Charger depuis serveur';
+    const loadBtn = document.getElementById('load-btn');
+    
+    if (loadBtn) {
+        loadBtn.textContent = '⏳ Chargement...';
+        loadBtn.disabled = true;
+    }
+    
+    try {
+        await chargerDepuisServeurAuto();
         
-        await chargerDonnees();
+        // Mettre à jour l'affichage après le chargement
+        updateMoisAffichage();
+        updateActiveTab();
+        updateSaisieFields();
         
-        boutonActualiser.textContent = originalText;
-        boutonActualiser.disabled = false;
-    } else {
-        await chargerDonnees();
+        showNotification('✅ Données chargées avec succès depuis le serveur');
+        
+    } catch (error) {
+        console.error('Erreur chargement manuel:', error);
+        showNotification('❌ Erreur de chargement', 'warning');
+    } finally {
+        if (loadBtn) {
+            loadBtn.textContent = '⬇️ Charger depuis serveur';
+            loadBtn.disabled = false;
+        }
     }
 }
 
-// 🖥️ Mettre à jour l'interface utilisateur
-function mettreAJourInterface() {
-    // Calculs globaux
-    let totalRdv = 0, totalVentes = 0, totalCA = 0, totalObjectif = 0;
+// 🔄 MODIFICATION : Votre fonction sauvegarderVersServeur existante - avec intégration Blob
+async function sauvegarderVersServeur() {
+    console.log('⬆️ Sauvegarde manuelle vers serveur');
     
-    Object.values(vendeursData).forEach(vendeur => {
-        totalRdv += vendeur.rdv || 0;
-        totalVentes += vendeur.ventes || 0;
-        totalCA += vendeur.ca || 0;
-        totalObjectif += vendeur.objectif || 0;
-    });
+    const saveBtn = document.getElementById('save-server-btn');
+    const originalText = 'Sauvegarder vers serveur';
     
-    const tauxGlobal = totalRdv > 0 ? ((totalVentes / totalRdv) * 100).toFixed(1) : 0;
-    const progression = totalObjectif > 0 ? ((totalCA / totalObjectif) * 100).toFixed(1) : 0;
-    
-    // Mise à jour des éléments HTML
-    const elements = {
-        'totalRdv': totalRdv,
-        'totalVentes': totalVentes,
-        'tauxGlobal': tauxGlobal + '%',
-        'caRealise': new Intl.NumberFormat('fr-FR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 0
-        }).format(totalCA),
-        'objectifTotal': new Intl.NumberFormat('fr-FR', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 0
-        }).format(totalObjectif),
-        'progression': progression + '%'
-    };
-
-    // Appliquer les mises à jour
-    Object.entries(elements).forEach(([id, value]) => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.textContent = value;
-        }
-    });
-    
-    // Trouver le meilleur vendeur
-    let meilleurVendeur = null;
-    let meilleurCA = 0;
-    
-    for (const [nom, data] of Object.entries(vendeursData)) {
-        if (data.ca > meilleurCA) {
-            meilleurCA = data.ca;
-            meilleurVendeur = { nom, ...data };
-        }
+    if (saveBtn) {
+        saveBtn.textContent = '⏳ Sauvegarde...';
+        saveBtn.disabled = true;
     }
     
-    // Mise à jour du meilleur vendeur
-    if (meilleurVendeur) {
-        const elementsVendeur = {
-            'meilleurVendeurNom': meilleurVendeur.nom,
-            'meilleurVendeurCA': new Intl.NumberFormat('fr-FR', {
-                style: 'currency',
-                currency: 'EUR',
-                minimumFractionDigits: 0
-            }).format(meilleurVendeur.ca),
-            'meilleurVendeurTaux': (meilleurVendeur.rdv > 0 ? 
-                ((meilleurVendeur.ventes / meilleurVendeur.rdv) * 100).toFixed(1) : 0) + '%',
-            'meilleurVendeurProgression': (meilleurVendeur.objectif > 0 ? 
-                ((meilleurVendeur.ca / meilleurVendeur.objectif) * 100).toFixed(1) : 0) + '%'
-        };
-
-        Object.entries(elementsVendeur).forEach(([id, value]) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = value;
-            }
-        });
+    try {
+        const success = await sauvegarderVersServeurAuto();
+        
+        if (success) {
+            showNotification('✅ Données sauvegardées sur le serveur');
+        } else {
+            showNotification('❌ Erreur de sauvegarde', 'warning');
+        }
+        
+    } catch (error) {
+        console.error('Erreur sauvegarde manuelle:', error);
+        showNotification('❌ Erreur de sauvegarde', 'warning');
+    } finally {
+        if (saveBtn) {
+            saveBtn.textContent = '⬆️ Sauvegarder vers serveur';
+            saveBtn.disabled = false;
+        }
     }
-    
-    // Mettre à jour les formulaires
-    chargerVendeurDansFormulaire();
-    
-    console.log(`🔄 Interface mise à jour (${currentMonth})`);
 }
 
-// 💾 Sauvegarder les données d'un vendeur
-async function sauvegarderVendeur() {
-    const vendeur = document.getElementById('vendeurSelect')?.value;
-    const rdv = parseInt(document.getElementById('rdvInput')?.value) || 0;
-    const ventes = parseInt(document.getElementById('ventesInput')?.value) || 0;
-    const ca = parseInt(document.getElementById('caInput')?.value) || 0;
-    const marge = parseInt(document.getElementById('margeInput')?.value) || 0;
-    const objectif = parseInt(document.getElementById('objectifInput')?.value) || 0;
+// 🔄 MODIFICATION : Votre fonction sauvegarderDonnees existante - avec auto-sauvegarde
+function sauvegarderDonneesAvecBlob() {
+    console.log('💾 Sauvegarde données avec intégration Blob');
     
-    if (!vendeur) {
-        alert('⚠️ Veuillez sélectionner un vendeur');
+    const v = document.getElementById('vendeur-select')?.value;
+    const prospects = parseInt(document.getElementById('prospects-input')?.value) || 0;
+    const ventes = parseInt(document.getElementById('ventes-input')?.value) || 0;
+    const ca = parseInt(document.getElementById('ca-input')?.value) || 0;
+    const margeInput = document.getElementById('marge-input')?.value;
+    const objectifInput = document.getElementById('objectif-input')?.value;
+    
+    if (!v) {
+        showNotification('Erreur: Sélectionnez un vendeur', 'warning');
         return;
     }
     
-    // Mise à jour des données
-    vendeursData[vendeur] = { rdv, ventes, ca, marge, objectif };
-    
-    // Affichage temporaire de sauvegarde
-    const boutonSauvegarder = document.querySelector('[onclick*="sauvegarder"]');
-    if (boutonSauvegarder) {
-        const originalText = boutonSauvegarder.textContent;
-        boutonSauvegarder.textContent = '💾 Sauvegarde...';
-        boutonSauvegarder.disabled = true;
+    if (prospects === 0 && ventes === 0 && ca === 0) {
+        showNotification('Veuillez saisir au moins une valeur', 'warning');
+        return;
     }
     
-    // Sauvegarde
-    const succes = await sauvegarderDonnees();
-    
-    // Restaurer le bouton
-    if (boutonSauvegarder) {
-        boutonSauvegarder.textContent = '💾 Sauvegarder';
-        boutonSauvegarder.disabled = false;
+    if (ventes > prospects && prospects > 0) {
+        showNotification('Erreur: Les ventes ne peuvent pas dépasser les prospects', 'warning');
+        return;
     }
     
-    if (succes) {
-        alert('✅ Données sauvegardées avec succès !');
-        mettreAJourInterface();
-    } else {
-        alert('⚠️ Données sauvegardées localement seulement (vérifiez votre connexion)');
-        mettreAJourInterface();
-    }
-}
-
-// 📋 Charger les données d'un vendeur dans le formulaire
-function chargerVendeurDansFormulaire() {
-    const vendeurSelect = document.getElementById('vendeurSelect');
-    if (vendeurSelect && vendeurSelect.value && vendeursData[vendeurSelect.value]) {
-        const data = vendeursData[vendeurSelect.value];
-        
-        const inputs = {
-            'rdvInput': data.rdv || 0,
-            'ventesInput': data.ventes || 0,
-            'caInput': data.ca || 0,
-            'margeInput': data.marge || 0,
-            'objectifInput': data.objectif || 0
-        };
-
-        Object.entries(inputs).forEach(([id, value]) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.value = value;
-            }
-        });
-    }
-}
-
-// 🗑️ Réinitialiser les données du mois actuel
-async function reinitialiserMois() {
-    if (confirm(`⚠️ Êtes-vous sûr de vouloir effacer toutes les données du mois ${currentMonth} ?`)) {
-        vendeursData = {
-            Vincent: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 },
-            Raphael: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 },
-            Leo: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 },
-            Pablo: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 },
-            Nathan: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 }
-        };
-        
-        await sauvegarderDonnees();
-        mettreAJourInterface();
-        alert(`🔄 Données du mois ${currentMonth} réinitialisées`);
-    }
-}
-
-// 🗑️ Tout effacer (tous les mois)
-async function toutEffacer() {
-    if (confirm('⚠️ ATTENTION : Êtes-vous sûr de vouloir effacer TOUTES les données (tous les mois) ?')) {
-        // Effacer complètement le blob
-        try {
-            const response = await fetch(`${API_ENDPOINT}?d=${DEFAULT_KEY}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ donneesParMois: {}, version: 'blob-1' })
-            });
-            
-            if (response.ok) {
-                vendeursData = {
-                    Vincent: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 },
-                    Raphael: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 },
-                    Leo: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 },
-                    Pablo: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 },
-                    Nathan: { rdv: 0, ventes: 0, ca: 0, marge: 0, objectif: 0 }
-                };
-                localStorage.removeItem('dashboardData');
-                mettreAJourInterface();
-                alert('🗑️ Toutes les données ont été effacées');
-            }
-        } catch (error) {
-            console.error('Erreur lors de l\'effacement:', error);
-            alert('❌ Erreur lors de l\'effacement');
+    const d = getDonneesActuelles();
+    d[v].prospects += prospects;
+    d[v].ventes += ventes;
+    d[v].ca += ca;
+    
+    if (margeInput !== '') d[v].margeValeur = Math.max(0, parseFloat(margeInput));
+    if (objectifInput !== '') d[v].objectif = Math.max(0, parseFloat(objectifInput));
+    
+    // Reset inputs
+    ['prospects-input', 'ventes-input', 'ca-input'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    
+    // 🆕 SAUVEGARDE AUTOMATIQUE vers Blob
+    sauvegarderVersServeurAuto().then(success => {
+        if (success) {
+            showNotification(`✅ Données de ${v} sauvegardées et synchronisées`);
+        } else {
+            showNotification(`⚠️ Données de ${v} sauvegardées localement seulement`);
         }
+    });
+    
+    updateActiveTab();
+}
+
+// 🆕 NOUVELLE FONCTION : Synchronisation périodique
+function demarrerSynchronisationPeriodique() {
+    console.log('🔄 Démarrage synchronisation périodique (toutes les 5 minutes)');
+    
+    setInterval(async () => {
+        console.log('🔄 Synchronisation périodique...');
+        try {
+            await chargerDepuisServeurAuto();
+            updateActiveTab(); // Mettre à jour l'affichage avec les nouvelles données
+        } catch (error) {
+            console.error('Erreur synchronisation périodique:', error);
+        }
+    }, 5 * 60 * 1000); // 5 minutes
+}
+
+// 🔄 REMPLACEMENT : Remplacer votre fonction sauvegarderDonnees existante
+function remplacerFonctionSauvegarde() {
+    // Remplacer la fonction globale existante
+    if (typeof window.sauvegarderDonnees === 'function') {
+        console.log('🔄 Remplacement de la fonction sauvegarderDonnees existante');
+        window.sauvegarderDonnees = sauvegarderDonneesAvecBlob;
     }
 }
 
-// 🚀 Initialisation au chargement de la page
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🚀 Initialisation du dashboard avec Vercel Blob...');
-    console.log('📅 Mois actuel:', currentMonth);
+// 🆕 NOUVELLE FONCTION : Initialisation avec chargement Blob
+async function initialiserAvecBlob() {
+    console.log('🚀 Initialisation avec intégration Blob');
     
-    // Charger les données
-    await chargerDonnees();
-    
-    // Configuration des événements
-    const vendeurSelect = document.getElementById('vendeurSelect');
-    if (vendeurSelect) {
-        vendeurSelect.addEventListener('change', chargerVendeurDansFormulaire);
+    try {
+        // Charger les données depuis le serveur
+        await chargerDepuisServeurAuto();
+        
+        // Initialiser les données si nécessaire
+        if (Object.keys(donneesParMois).length === 0) {
+            initialiserDonnees();
+        }
+        
+        // Démarrer la synchronisation périodique
+        demarrerSynchronisationPeriodique();
+        
+        // Remplacer les fonctions existantes
+        remplacerFonctionSauvegarde();
+        
+        console.log('✅ Intégration Blob terminée avec succès');
+        showNotification('🌐 Dashboard synchronisé avec le cloud', 'success');
+        
+    } catch (error) {
+        console.error('❌ Erreur initialisation Blob:', error);
+        // Continuer avec les données par défaut
+        initialiserDonnees();
+        showNotification('⚠️ Mode hors ligne - données locales uniquement', 'warning');
     }
-    
-    console.log('✅ Dashboard initialisé avec votre API Blob existante');
-});
+}
 
-// 🌐 Export des fonctions pour usage global
-window.sauvegarderVendeur = sauvegarderVendeur;
-window.chargerVendeurDansFormulaire = chargerVendeurDansFormulaire;
-window.reinitialiserMois = reinitialiserMois;
-window.toutEffacer = toutEffacer;
-window.actualiserDonnees = actualiserDonnees;
+// 🚀 AUTO-INITIALISATION
+console.log('⏳ Attente du chargement complet du DOM...');
+
+// Attendre que votre script principal soit chargé
+function attendreInitialisationPrincipale() {
+    if (typeof donneesParMois !== 'undefined' && typeof showNotification === 'function') {
+        console.log('✅ Script principal détecté - lancement intégration Blob');
+        initialiserAvecBlob();
+    } else {
+        console.log('⏳ Script principal non encore chargé - nouvelle tentative dans 500ms');
+        setTimeout(attendreInitialisationPrincipale, 500);
+    }
+}
+
+// Démarrer l'attente après le chargement du DOM
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(attendreInitialisationPrincipale, 1000);
+    });
+} else {
+    setTimeout(attendreInitialisationPrincipale, 1000);
+}
+
+console.log('📡 Frontend-data.js chargé - Intégration Blob prête');
