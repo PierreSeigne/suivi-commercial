@@ -1268,6 +1268,70 @@ function reinitialiserTout() {
   }
 }
 
+// === FONCTIONS SERVEUR ===
+async function sauvegarderVersServeur() {
+  console.log('⬆️ Sauvegarde vers serveur');
+  try {
+    const dataToSave = {
+      donneesParMois,
+      moisActuel,
+      anneeActuelle,
+      lastUpdate: new Date().toISOString(),
+      version: '2.5-corrige'
+    };
+
+    const response = await fetch('/api/save-data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dataToSave)
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      showNotification('✅ Données sauvegardées sur le serveur !');
+      console.log('Sauvegarde réussie:', result);
+    } else {
+      throw new Error(`Erreur serveur: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('❌ Erreur sauvegarde serveur:', error);
+    showNotification('❌ Erreur lors de la sauvegarde serveur', 'warning');
+  }
+}
+
+async function chargerDepuisServeur() {
+  console.log('⬇️ Chargement depuis serveur');
+  try {
+    const response = await fetch('/api/load-data');
+    
+    if (response.ok) {
+      const data = await response.json();
+      
+      if (data.donneesParMois) {
+        donneesParMois = data.donneesParMois;
+        moisActuel = data.moisActuel || new Date().getMonth();
+        anneeActuelle = data.anneeActuelle || new Date().getFullYear();
+        
+        updateMoisAffichage();
+        updateActiveTab();
+        showNotification('✅ Données chargées depuis le serveur !');
+        console.log('Chargement réussi:', data);
+      } else {
+        throw new Error('Format de données invalide');
+      }
+    } else if (response.status === 404) {
+      showNotification('ℹ️ Aucune donnée trouvée sur le serveur', 'warning');
+    } else {
+      throw new Error(`Erreur serveur: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('❌ Erreur chargement serveur:', error);
+    showNotification('❌ Erreur lors du chargement serveur', 'warning');
+  }
+}
+
 // === ÉVÉNEMENTS ===
 function setupEventListeners() {
   console.log('🔧 Configuration des événements');
@@ -1283,6 +1347,8 @@ function setupEventListeners() {
   const buttons = {
     'save-btn': sauvegarderDonnees,
     'export-btn': exporterDonnees,
+    'load-btn': chargerDepuisServeur,
+    'save-server-btn': sauvegarderVersServeur,
     'reset-month-btn': reinitialiserMois,
     'reset-all-btn': reinitialiserTout,
     'refresh-war-room': updateWarRoom,
@@ -1334,3 +1400,4 @@ console.log('📋 Dashboard Commercial Pro v2.5 - Script chargé et corrigé');
 </script>
 </body>
 </html>
+  
