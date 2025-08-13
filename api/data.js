@@ -1,14 +1,5 @@
 import { put, list } from '@vercel/blob';
 
-export const config = { 
-  runtime: 'nodejs',
-  api: {
-    bodyParser: {
-      sizeLimit: '1mb',
-    },
-  },
-};
-
 function pickKey(req) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const d = url.searchParams.get('d') || 'default';
@@ -26,18 +17,18 @@ function getDefaultData() {
 }
 
 export default async function handler(req, res) {
+  // Headers CORS pour éviter les erreurs de sécurité
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   try {
     const key = pickKey(req);
     console.log('Processing request:', req.method, 'for key:', key);
-
-    // Ajouter les headers CORS
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-    if (req.method === 'OPTIONS') {
-      return res.status(200).end();
-    }
 
     if (req.method === 'GET') {
       try {
@@ -78,7 +69,12 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       try {
-        const bodyData = req.body;
+        let bodyData = req.body;
+        
+        // Si le body est une string, la parser
+        if (typeof bodyData === 'string') {
+          bodyData = JSON.parse(bodyData);
+        }
         
         // Validation des données reçues
         if (!bodyData || typeof bodyData !== 'object') {
@@ -122,6 +118,7 @@ export default async function handler(req, res) {
       }
     }
 
+    // Méthode non autorisée
     res.setHeader('Allow', ['GET', 'POST', 'OPTIONS']);
     return res.status(405).json({ 
       ok: false, 
