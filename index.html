@@ -90,6 +90,18 @@
       .cards-grid { grid-template-columns: 1fr; }
       .advanced-grid { grid-template-columns: 1fr; }
     }
+
+    /* [NOUVEAU] Badges & chips */
+    .chip { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:14px; font-size:12px; font-weight:600; }
+    .chip.ok { background:#c6f6d5; color:#22543d; }
+    .chip.warn { background:#fefcbf; color:#744210; }
+    .chip.ko { background:#fed7d7; color:#742a2a; }
+
+    /* [NOUVEAU] Cartes compactes */
+    .mini-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:20px; margin-top:10px; }
+    .mini-card { background:rgba(255,255,255,0.95); border-radius:12px; padding:18px; box-shadow:0 6px 24px rgba(0,0,0,0.08); }
+    .mini-card h4 { font-size:13px; color:#4a5568; text-transform:uppercase; letter-spacing:.8px; margin-bottom:6px; }
+    .mini-card .big { font-size:1.4rem; font-weight:800; }
   </style>
 </head>
 <body>
@@ -164,6 +176,25 @@
           <span>🔮</span>
           <span id="prevision-status">tendance actuelle</span>
         </div>
+      </div>
+    </div>
+
+    <!-- KPI Qualité & Conversion -->
+    <div class="mini-grid">
+      <div class="mini-card">
+        <h4>Ventes conformes (≥ 2k€ marge)</h4>
+        <div class="big" id="ventes-conformes">0</div>
+        <div class="trend" id="ventes-conformes-trend">—</div>
+      </div>
+      <div class="mini-card">
+        <h4>Taux de conformité marge</h4>
+        <div class="big" id="taux-conformite">0%</div>
+        <div class="trend"><span>🎯</span><span>Objectif 100% des ventes</span></div>
+      </div>
+      <div class="mini-card">
+        <h4>Écart à combler (conv.)</h4>
+        <div class="big" id="ecart-conv">0 RDV convertis</div>
+        <div class="trend"><span>📌</span><span id="ecart-conv-note">pour atteindre 25%</span></div>
       </div>
     </div>
 
@@ -431,6 +462,11 @@
           <h3 style="color: #a0aec0;">CA Équipe</h3>
           <div class="value" id="war-ca-equipe">0k€</div>
         </div>
+        <!-- Non-conformités marge -->
+        <div class="overview-card" style="background: rgba(255,255,255,0.1); color: white;">
+          <h3 style="color: #a0aec0;">Non-conformités marge</h3>
+          <div class="value" style="color:#f56565" id="war-non-conformes">0</div>
+        </div>
       </div>
 
       <div style="margin-top: 25px;">
@@ -458,6 +494,15 @@ const MOIS_NOMS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','A
 let moisActuel = new Date().getMonth();
 let anneeActuelle = new Date().getFullYear();
 let donneesParMois = {};
+
+// Cibles pilotage
+const OBJECTIF_TAUX = 25;        // % conversion cible
+const MARGE_MIN = 2000;          // marge unitaire minimale attendue
+
+function isConformeMarge(vendeurData){
+  const mu = Number(vendeurData?.margeValeur || 0);
+  return mu >= MARGE_MIN;
+}
 
 // === FONCTIONS UTILITAIRES ===
 function vendeurDefaults(){
@@ -567,45 +612,32 @@ function updateActionsContainer() {
   const d = getDonneesActuelles();
   const actions = [];
   
-  // Analyser les performances pour générer des actions
   for(const v in d) {
     const x = d[v];
     const progression = x.objectif > 0 ? (x.ca / x.objectif * 100) : 0;
     const taux = x.prospects > 0 ? (x.ventes / x.prospects * 100) : 0;
     
     if (progression < 50) {
-      actions.push({
-        priorite: 'URGENT',
-        description: `Coaching ${v} - ${progression.toFixed(0)}% objectif`,
-        icon: '🔴'
-      });
+      actions.push({ priorite: 'URGENT', description: `Coaching ${v} - ${progression.toFixed(0)}% objectif`, icon: '🔴' });
     }
     
     if (taux < 20 && x.prospects > 3) {
-      actions.push({
-        priorite: 'IMPORTANT',
-        description: `Formation closing ${v} - Taux ${taux.toFixed(1)}%`,
-        icon: '🟡'
-      });
+      actions.push({ priorite: 'IMPORTANT', description: `Formation closing ${v} - Taux ${taux.toFixed(1)}%`, icon: '🟡' });
+    }
+
+    // coaching marge
+    if ((x.margeValeur || 0) < MARGE_MIN && x.ventes > 0) {
+      actions.push({ priorite:'IMPORTANT', description:`Repricing ${v} - Marge ${Math.round(x.margeValeur)}€ < ${MARGE_MIN}€`, icon:'🟡' });
     }
   }
   
-  // Actions générales
   const joursRestants = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate();
   if (joursRestants < 10) {
-    actions.push({
-      priorite: 'URGENT',
-      description: `Sprint final - ${joursRestants} jours restants`,
-      icon: '🔴'
-    });
+    actions.push({ priorite: 'URGENT', description: `Sprint final - ${joursRestants} jours restants`, icon: '🔴' });
   }
   
   if (actions.length === 0) {
-    actions.push({
-      priorite: 'OPTIMISATION',
-      description: 'Équipe performante - Maintenir le cap',
-      icon: '🟢'
-    });
+    actions.push({ priorite: 'OPTIMISATION', description: 'Équipe performante - Maintenir le cap', icon: '🟢' });
   }
   
   let html = '';
@@ -627,9 +659,7 @@ function updateJoursRestants() {
   const joursRestants = lastDay.getDate() - today.getDate();
   
   const element = document.getElementById('jours-restants');
-  if (element) {
-    element.textContent = `J+${today.getDate()}/${lastDay.getDate()} (${joursRestants}j restants)`;
-  }
+  if (element) element.textContent = `J+${today.getDate()}/${lastDay.getDate()} (${joursRestants}j restants)`;
 }
 
 // War Room
@@ -664,12 +694,17 @@ function updateWarRoom() {
   });
   
   const moyenneTaux = totalProspects > 0 ? (totalVentes / totalProspects * 100) : 0;
+
+  // Non-conformités marge
+  let nonConformes = 0;
+  vendeurs.forEach(v => { if (!isConformeMarge(d[v])) nonConformes += d[v].ventes || 0; });
   
   const elements = {
     'war-vendeurs-actifs': vendeursActifs,
     'war-alertes-critiques': alertesCount,
     'war-taux-equipe': moyenneTaux.toFixed(1) + '%',
-    'war-ca-equipe': (totalCA / 1000).toFixed(0) + 'k€'
+    'war-ca-equipe': (totalCA / 1000).toFixed(0) + 'k€',
+    'war-non-conformes': nonConformes
   };
   
   for(const [id, value] of Object.entries(elements)) {
@@ -677,28 +712,20 @@ function updateWarRoom() {
     if (el) el.textContent = value;
   }
   
-  // Mise à jour des alertes détaillées
   const alertesContainer = document.getElementById('war-alertes-detaillees');
   if (alertesContainer) {
     let alertesHtml = '';
-    
     if (alertesCount === 0) {
       alertesHtml = '<div style="background: rgba(56,161,105,0.2); color: #22543d; padding: 12px; border-radius: 8px; border-left: 4px solid #38a169;">✅ Aucune alerte critique - Équipe performante</div>';
     } else {
       alertesHtml = `<div style="background: rgba(237,137,54,0.2); color: #744210; padding: 12px; border-radius: 8px; border-left: 4px solid #ed8936;">⚠️ ${alertesCount} alerte(s) détectée(s) - Vérifiez les performances individuelles</div>`;
     }
-    
     alertesContainer.innerHTML = alertesHtml;
   }
   
-  // Mise à jour de l'heure
   const lastUpdateEl = document.getElementById('war-last-update');
   if (lastUpdateEl) {
-    lastUpdateEl.textContent = new Date().toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
+    lastUpdateEl.textContent = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }
 }
 
@@ -710,9 +737,7 @@ function changerMois(direction) {
   else if(moisActuel > 11) { moisActuel = 0; anneeActuelle++; }
   
   const key = getMoisKey();
-  if(!donneesParMois[key]) { 
-    donneesParMois[key] = vendeurDefaults(); 
-  }
+  if(!donneesParMois[key]) { donneesParMois[key] = vendeurDefaults(); }
   
   updateMoisAffichage();
   updateActiveTab();
@@ -720,24 +745,18 @@ function changerMois(direction) {
 
 function updateMoisAffichage(){
   const el = document.getElementById('current-month');
-  if (el) {
-    el.textContent = `${MOIS_NOMS[moisActuel]} ${anneeActuelle}`;
-  }
+  if (el) el.textContent = `${MOIS_NOMS[moisActuel]} ${anneeActuelle}`;
 }
 
 // === GESTION ONGLETS ===
 function showTab(tabName) {
   console.log(`🔄 Affichage onglet: ${tabName}`);
-  
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  
   const content = document.getElementById(tabName);
   const tab = document.querySelector(`[data-tab="${tabName}"]`);
-  
   if (content) content.classList.add('active');
   if (tab) tab.classList.add('active');
-  
   updateTabContent(tabName);
 }
 
@@ -751,31 +770,15 @@ function updateActiveTab() {
 
 function updateTabContent(tabName) {
   console.log(`🔄 Mise à jour contenu: ${tabName}`);
-  
   switch(tabName) {
-    case 'vue-ensemble': 
-      updateVueEnsemble(); 
-      break;
-    case 'vendeurs': 
-      updateVendeurs(); 
-      break;
-    case 'vue-annuelle': 
-      updateVueAnnuelle(); 
-      break;
-    case 'comparatif': 
-      updateComparatif(); 
-      break;
-    case 'ia': 
-      updateIATab(); 
-      break;
-    case 'saisie': 
-      updateSaisieFields(); 
-      break;
-    case 'warroom': 
-      updateWarRoom(); 
-      break;
-    default:
-      console.log(`⚠️ Onglet inconnu: ${tabName}`);
+    case 'vue-ensemble': updateVueEnsemble(); break;
+    case 'vendeurs': updateVendeurs(); break;
+    case 'vue-annuelle': updateVueAnnuelle(); break;
+    case 'comparatif': updateComparatif(); break;
+    case 'ia': updateIATab(); break;
+    case 'saisie': updateSaisieFields(); break;
+    case 'warroom': updateWarRoom(); break;
+    default: console.log(`⚠️ Onglet inconnu: ${tabName}`);
   }
 }
 
@@ -815,10 +818,7 @@ function updateVueEnsemble() {
       progression: objectif > 0 ? (ca / objectif * 100) : 0
     });
     
-    if(ca > bestCA) {
-      bestCA = ca;
-      bestVendeur = v;
-    }
+    if(ca > bestCA) { bestCA = ca; bestVendeur = v; }
   }
   
   const tauxGlobal = totalProspects > 0 ? (totalVentes / totalProspects * 100) : 0;
@@ -826,17 +826,24 @@ function updateVueEnsemble() {
   const margeMoyenne = totalVentes > 0 ? (totalMarge / totalVentes) : 0;
   const caParVendeur = vendeurStats.length > 0 ? (totalCA / vendeurStats.length) : 0;
   
-  // Calcul prévision fin de mois
+  // Prévision fin de mois
   const jourActuel = new Date().getDate();
   const joursDansMois = new Date(anneeActuelle, moisActuel + 1, 0).getDate();
-  const previsionCA = totalCA * (joursDansMois / jourActuel);
+  const previsionCA = totalCA * (joursDansMois / Math.max(jourActuel,1));
   
-  // Calculs d'évolution (simulation par rapport au mois précédent)
-  const evolutionProspects = Math.round((Math.random() - 0.5) * 30); // Simulation
+  // Évolutions simulées
+  const evolutionProspects = Math.round((Math.random() - 0.5) * 30);
   const evolutionVentes = Math.round((Math.random() - 0.5) * 25);
-  const evolutionCA = Math.round((Math.random() - 0.5) * 20);
+
+  // Conformité marge & écart conversion
+  let ventesConformes = 0, ventesNonConformes = 0;
+  vendeurStats.forEach(v => { if (isConformeMarge(v)) ventesConformes += v.ventes; else ventesNonConformes += v.ventes; });
+  const totalVentesCalc = totalVentes;
+  const tauxConformite = totalVentesCalc > 0 ? (ventesConformes / totalVentesCalc * 100) : 0;
+  const ventesCible = Math.ceil(totalProspects * (OBJECTIF_TAUX/100));
+  const ecartConv = Math.max(0, ventesCible - totalVentesCalc);
   
-  // Mise à jour des KPIs principaux
+  // KPIs
   const elements = {
     'total-prospects': totalProspects,
     'total-ventes': totalVentes,
@@ -848,72 +855,60 @@ function updateVueEnsemble() {
     'marge-totale': totalMarge.toLocaleString() + ' €',
     'progression-equipe-global': progressionCA.toFixed(1) + '%'
   };
-  
   for(const [id, value] of Object.entries(elements)) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = value;
+    const el = document.getElementById(id); if (el) el.textContent = value;
   }
+
+  // KPI qualité
+  const elVC = document.getElementById('ventes-conformes'); if (elVC) elVC.textContent = `${ventesConformes}/${totalVentesCalc}`;
+  const elTC = document.getElementById('taux-conformite'); if (elTC) elTC.textContent = `${tauxConformite.toFixed(0)}%`;
+  const elEC = document.getElementById('ecart-conv'); if (elEC) elEC.textContent = `${ecartConv} RDV convertis`;
   
   // Évolutions vs mois précédent
-  document.getElementById('evolution-prospects').textContent = 
-    `${evolutionProspects > 0 ? '+' : ''}${evolutionProspects}% vs mois dernier`;
-  document.getElementById('evolution-ventes').textContent = 
-    `${evolutionVentes > 0 ? '+' : ''}${evolutionVentes}% vs mois dernier`;
-  document.getElementById('evolution-ca').textContent = 
-    `${progressionCA.toFixed(0)}% de l'objectif`;
+  const ep = document.getElementById('evolution-prospects'); if (ep) ep.textContent = `${evolutionProspects > 0 ? '+' : ''}${evolutionProspects}% vs mois dernier`;
+  const ev = document.getElementById('evolution-ventes'); if (ev) ev.textContent = `${evolutionVentes > 0 ? '+' : ''}${evolutionVentes}% vs mois dernier`;
+  const ec = document.getElementById('evolution-ca'); if (ec) ec.textContent = `${progressionCA.toFixed(0)}% de l'objectif`;
   
   // Statut du taux de conversion
   const tauxIcon = document.getElementById('taux-icon');
   const tauxStatus = document.getElementById('taux-status');
-  if (tauxGlobal >= 25) {
-    tauxIcon.textContent = '🎯';
-    tauxStatus.textContent = 'Objectif atteint !';
-    tauxStatus.style.color = '#38a169';
-  } else if (tauxGlobal >= 20) {
-    tauxIcon.textContent = '📈';
-    tauxStatus.textContent = 'Proche objectif';
-    tauxStatus.style.color = '#ed8936';
+  if (tauxGlobal >= OBJECTIF_TAUX) {
+    tauxIcon.textContent = '🎯'; tauxStatus.textContent = 'Objectif atteint !'; tauxStatus.style.color = '#38a169';
+  } else if (tauxGlobal >= OBJECTIF_TAUX - 5) {
+    tauxIcon.textContent = '📈'; tauxStatus.textContent = 'Proche objectif'; tauxStatus.style.color = '#ed8936';
   } else {
-    tauxIcon.textContent = '⚠️';
-    tauxStatus.textContent = 'Amélioration nécessaire';
-    tauxStatus.style.color = '#e53e3e';
+    tauxIcon.textContent = '⚠️'; tauxStatus.textContent = 'Amélioration nécessaire'; tauxStatus.style.color = '#e53e3e';
   }
   
   // Statut de la prévision
   const previsionStatus = document.getElementById('prevision-status');
-  const ecartPrevision = ((previsionCA - totalObjectif) / totalObjectif * 100);
-  if (ecartPrevision >= 0) {
-    previsionStatus.textContent = `+${ecartPrevision.toFixed(0)}% vs objectif`;
-    previsionStatus.style.color = '#38a169';
-  } else {
-    previsionStatus.textContent = `${ecartPrevision.toFixed(0)}% vs objectif`;
-    previsionStatus.style.color = '#e53e3e';
+  const ecartPrevision = ((previsionCA - totalObjectif) / Math.max(totalObjectif,1) * 100);
+  if (previsionStatus) {
+    if (ecartPrevision >= 0) { previsionStatus.textContent = `+${isFinite(ecartPrevision) ? ecartPrevision.toFixed(0) : '0'}% vs objectif`; previsionStatus.style.color = '#38a169'; }
+    else { previsionStatus.textContent = `${isFinite(ecartPrevision) ? ecartPrevision.toFixed(0) : '0'}% vs objectif`; previsionStatus.style.color = '#e53e3e'; }
   }
   
   // Meilleure marge
-  const meilleureMargeVendeur = vendeurStats.reduce((max, v) => 
-    v.margeUnitaire > max.margeUnitaire ? v : max, vendeurStats[0] || {margeUnitaire: 0, nom: '-'});
-  document.getElementById('meilleure-marge').textContent = 
-    `${meilleureMargeVendeur.margeUnitaire.toLocaleString()} € (${meilleureMargeVendeur.nom})`;
+  const meilleureMargeVendeur = vendeurStats.reduce((max, v) => v.margeUnitaire > max.margeUnitaire ? v : max, vendeurStats[0] || {margeUnitaire: 0, nom: '-'});
+  const mm = document.getElementById('meilleure-marge');
+  if (mm) mm.textContent = `${(meilleureMargeVendeur?.margeUnitaire || 0).toLocaleString()} € (${meilleureMargeVendeur?.nom || '-'})`;
   
-  // Vendeur le plus régulier (simulation basée sur écart-type)
+  // Vendeur le plus régulier (simulation)
   const vendeurRegulier = vendeurStats.find(v => v.taux >= 20 && v.taux <= 30)?.nom || 
-                         vendeurStats.sort((a, b) => Math.abs(a.taux - 25) - Math.abs(b.taux - 25))[0]?.nom || '-';
-  document.getElementById('vendeur-regulier').textContent = vendeurRegulier;
+                          vendeurStats.sort((a, b) => Math.abs(a.taux - 25) - Math.abs(b.taux - 25))[0]?.nom || '-';
+  const vr = document.getElementById('vendeur-regulier'); if (vr) vr.textContent = vendeurRegulier;
   
-  // Temps de cycle moyen (simulation)
+  // Cycle moyen (simulation)
   const cycleSimule = Math.round(15 + Math.random() * 10);
-  document.getElementById('cycle-moyen').textContent = `~${cycleSimule} jours`;
+  const cm = document.getElementById('cycle-moyen'); if (cm) cm.textContent = `~${cycleSimule} jours`;
   
   // Répartition des objectifs
-  document.getElementById('repartition-objectifs').style.width = `${Math.min(100, progressionCA)}%`;
+  const ro = document.getElementById('repartition-objectifs'); if (ro) ro.style.width = `${Math.min(100, progressionCA)}%`;
   
-  // Mise à jour des graphiques
+  // Graphiques & sections
   updatePrevisionChart(totalCA, previsionCA, totalObjectif);
   updateMargesChart(vendeurStats);
   updateInsights(vendeurStats, tauxGlobal, progressionCA, previsionCA, totalObjectif);
-  
-  // Mise à jour des autres sections
   updateTopVendeurEnrichi();
   updateActionsContainer();
   updateJoursRestants();
@@ -932,341 +927,136 @@ function updatePrevisionChart(caActuel, previsionCA, objectifCA) {
   canvas.height = height;
   
   ctx.clearRect(0, 0, width, height);
-  
-  // Configuration du graphique
   const padding = 40;
   const chartWidth = width - 2 * padding;
   const chartHeight = height - 2 * padding;
-  
-  // Données pour la courbe (jour par jour)
   const jourActuel = new Date().getDate();
   const joursDansMois = new Date(anneeActuelle, moisActuel + 1, 0).getDate();
   const maxValue = Math.max(previsionCA, objectifCA) * 1.1;
-  
-  // Points de données
   const points = [];
-  const caParJour = caActuel / jourActuel;
+  const caParJour = caActuel / Math.max(jourActuel, 1);
   
-  // Génération des points pour la courbe réalisée
   for (let jour = 1; jour <= jourActuel; jour++) {
-    const ca = caParJour * jour + (Math.random() - 0.5) * caParJour * 0.3; // Variation réaliste
-    points.push({
-      x: padding + (jour / joursDansMois) * chartWidth,
-      y: padding + chartHeight - (ca / maxValue) * chartHeight,
-      value: ca,
-      type: 'realized'
-    });
+    const ca = caParJour * jour + (Math.random() - 0.5) * caParJour * 0.3;
+    points.push({ x: padding + (jour / joursDansMois) * chartWidth, y: padding + chartHeight - (ca / Math.max(maxValue,1)) * chartHeight, value: ca, type: 'realized' });
   }
-  
-  // Points pour la prévision
   for (let jour = jourActuel + 1; jour <= joursDansMois; jour++) {
     const ca = caParJour * jour;
-    points.push({
-      x: padding + (jour / joursDansMois) * chartWidth,
-      y: padding + chartHeight - (ca / maxValue) * chartHeight,
-      value: ca,
-      type: 'forecast'
-    });
+    points.push({ x: padding + (jour / joursDansMois) * chartWidth, y: padding + chartHeight - (ca / Math.max(maxValue,1)) * chartHeight, value: ca, type: 'forecast' });
   }
+  const objectifY = padding + chartHeight - (objectifCA / Math.max(maxValue,1)) * chartHeight;
   
-  // Ligne de l'objectif
-  const objectifY = padding + chartHeight - (objectifCA / maxValue) * chartHeight;
-  
-  // Dessiner la grille
-  ctx.strokeStyle = '#e2e8f0';
-  ctx.lineWidth = 1;
-  
-  // Lignes horizontales
+  // Grille
+  ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
     const y = padding + (chartHeight / 4) * i;
-    ctx.beginPath();
-    ctx.moveTo(padding, y);
-    ctx.lineTo(padding + chartWidth, y);
-    ctx.stroke();
-    
-    // Labels des valeurs
+    ctx.beginPath(); ctx.moveTo(padding, y); ctx.lineTo(padding + chartWidth, y); ctx.stroke();
     const value = maxValue - (maxValue / 4) * i;
-    ctx.fillStyle = '#a0aec0';
-    ctx.font = '10px Arial';
-    ctx.textAlign = 'right';
-    ctx.fillText(`${(value / 1000).toFixed(0)}k€`, padding - 5, y + 3);
+    ctx.fillStyle = '#a0aec0'; ctx.font = '10px Arial'; ctx.textAlign = 'right'; ctx.fillText(`${(value / 1000).toFixed(0)}k€`, padding - 5, y + 3);
   }
-  
-  // Lignes verticales (tous les 5 jours)
   for (let jour = 5; jour <= joursDansMois; jour += 5) {
     const x = padding + (jour / joursDansMois) * chartWidth;
-    ctx.beginPath();
-    ctx.moveTo(x, padding);
-    ctx.lineTo(x, padding + chartHeight);
-    ctx.stroke();
-    
-    // Labels des jours
-    ctx.fillStyle = '#a0aec0';
-    ctx.font = '10px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(`J${jour}`, x, height - 10);
+    ctx.beginPath(); ctx.moveTo(x, padding); ctx.lineTo(x, padding + chartHeight); ctx.stroke();
+    ctx.fillStyle = '#a0aec0'; ctx.font = '10px Arial'; ctx.textAlign = 'center'; ctx.fillText(`J${jour}`, x, height - 10);
   }
   
-  // Ligne d'objectif
-  ctx.strokeStyle = '#38a169';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([5, 5]);
-  ctx.beginPath();
-  ctx.moveTo(padding, objectifY);
-  ctx.lineTo(padding + chartWidth, objectifY);
-  ctx.stroke();
-  ctx.setLineDash([]);
+  // Objectif
+  ctx.strokeStyle = '#38a169'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
+  ctx.beginPath(); ctx.moveTo(padding, objectifY); ctx.lineTo(padding + chartWidth, objectifY); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = '#38a169'; ctx.font = 'bold 11px Arial'; ctx.textAlign = 'left'; ctx.fillText('Objectif', padding + chartWidth - 60, objectifY - 5);
   
-  // Label objectif
-  ctx.fillStyle = '#38a169';
-  ctx.font = 'bold 11px Arial';
-  ctx.textAlign = 'left';
-  ctx.fillText('Objectif', padding + chartWidth - 60, objectifY - 5);
-  
-  // Zone réalisée (dégradé)
   const realizedPoints = points.filter(p => p.type === 'realized');
   if (realizedPoints.length > 1) {
     const gradient = ctx.createLinearGradient(0, padding, 0, padding + chartHeight);
-    gradient.addColorStop(0, 'rgba(102, 126, 234, 0.3)');
-    gradient.addColorStop(1, 'rgba(102, 126, 234, 0.05)');
-    
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.moveTo(realizedPoints[0].x, padding + chartHeight);
+    gradient.addColorStop(0, 'rgba(102, 126, 234, 0.3)'); gradient.addColorStop(1, 'rgba(102, 126, 234, 0.05)');
+    ctx.fillStyle = gradient; ctx.beginPath(); ctx.moveTo(realizedPoints[0].x, padding + chartHeight);
     realizedPoints.forEach(point => ctx.lineTo(point.x, point.y));
-    ctx.lineTo(realizedPoints[realizedPoints.length - 1].x, padding + chartHeight);
-    ctx.closePath();
-    ctx.fill();
+    ctx.lineTo(realizedPoints[realizedPoints.length - 1].x, padding + chartHeight); ctx.closePath(); ctx.fill();
   }
-  
-  // Zone prévision (dégradé)
   const forecastPoints = points.filter(p => p.type === 'forecast');
   if (forecastPoints.length > 1) {
     const gradient = ctx.createLinearGradient(0, padding, 0, padding + chartHeight);
-    gradient.addColorStop(0, 'rgba(159, 122, 234, 0.2)');
-    gradient.addColorStop(1, 'rgba(159, 122, 234, 0.05)');
-    
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    if (realizedPoints.length > 0) {
-      const lastRealized = realizedPoints[realizedPoints.length - 1];
-      ctx.moveTo(lastRealized.x, padding + chartHeight);
-      ctx.lineTo(lastRealized.x, lastRealized.y);
-    }
+    gradient.addColorStop(0, 'rgba(159, 122, 234, 0.2)'); gradient.addColorStop(1, 'rgba(159, 122, 234, 0.05)');
+    ctx.fillStyle = gradient; ctx.beginPath();
+    if (realizedPoints.length > 0) { const lastRealized = realizedPoints[realizedPoints.length - 1]; ctx.moveTo(lastRealized.x, padding + chartHeight); ctx.lineTo(lastRealized.x, lastRealized.y); }
+    else { ctx.moveTo(forecastPoints[0].x, forecastPoints[0].y); }
     forecastPoints.forEach(point => ctx.lineTo(point.x, point.y));
-    ctx.lineTo(forecastPoints[forecastPoints.length - 1].x, padding + chartHeight);
-    ctx.closePath();
-    ctx.fill();
+    ctx.lineTo(forecastPoints[forecastPoints.length - 1].x, padding + chartHeight); ctx.closePath(); ctx.fill();
   }
-  
-  // Courbe réalisée
   if (realizedPoints.length > 1) {
-    ctx.strokeStyle = '#667eea';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
+    ctx.strokeStyle = '#667eea'; ctx.lineWidth = 3; ctx.beginPath();
     ctx.moveTo(realizedPoints[0].x, realizedPoints[0].y);
-    
     for (let i = 1; i < realizedPoints.length; i++) {
-      const prev = realizedPoints[i - 1];
-      const curr = realizedPoints[i];
-      const cpx = prev.x + (curr.x - prev.x) * 0.5;
+      const prev = realizedPoints[i - 1]; const curr = realizedPoints[i]; const cpx = prev.x + (curr.x - prev.x) * 0.5;
       ctx.bezierCurveTo(cpx, prev.y, cpx, curr.y, curr.x, curr.y);
-    }
-    ctx.stroke();
+    } ctx.stroke();
   }
-  
-  // Courbe prévision
   if (forecastPoints.length > 1) {
-    ctx.strokeStyle = '#9f7aea';
-    ctx.lineWidth = 3;
-    ctx.setLineDash([8, 4]);
-    ctx.beginPath();
-    
-    if (realizedPoints.length > 0) {
-      const lastRealized = realizedPoints[realizedPoints.length - 1];
-      ctx.moveTo(lastRealized.x, lastRealized.y);
-      ctx.lineTo(forecastPoints[0].x, forecastPoints[0].y);
-    } else {
-      ctx.moveTo(forecastPoints[0].x, forecastPoints[0].y);
-    }
-    
+    ctx.strokeStyle = '#9f7aea'; ctx.lineWidth = 3; ctx.setLineDash([8, 4]); ctx.beginPath();
+    if (realizedPoints.length > 0) { const lastRealized = realizedPoints[realizedPoints.length - 1]; ctx.moveTo(lastRealized.x, lastRealized.y); ctx.lineTo(forecastPoints[0].x, forecastPoints[0].y); }
+    else { ctx.moveTo(forecastPoints[0].x, forecastPoints[0].y); }
     for (let i = 1; i < forecastPoints.length; i++) {
-      const prev = forecastPoints[i - 1];
-      const curr = forecastPoints[i];
-      const cpx = prev.x + (curr.x - prev.x) * 0.5;
+      const prev = forecastPoints[i - 1]; const curr = forecastPoints[i]; const cpx = prev.x + (curr.x - prev.x) * 0.5;
       ctx.bezierCurveTo(cpx, prev.y, cpx, curr.y, curr.x, curr.y);
-    }
-    ctx.stroke();
-    ctx.setLineDash([]);
+    } ctx.stroke(); ctx.setLineDash([]);
   }
   
-  // Points de données actuels
-  if (realizedPoints.length > 0) {
-    const lastPoint = realizedPoints[realizedPoints.length - 1];
-    ctx.fillStyle = '#667eea';
-    ctx.beginPath();
-    ctx.arc(lastPoint.x, lastPoint.y, 6, 0, 2 * Math.PI);
-    ctx.fill();
-    
-    // Point blanc au centre
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(lastPoint.x, lastPoint.y, 3, 0, 2 * Math.PI);
-    ctx.fill();
-  }
-  
-  // Légende
-  const legendY = padding + 15;
-  
-  // Réalisé
-  ctx.strokeStyle = '#667eea';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(padding + 10, legendY);
-  ctx.lineTo(padding + 30, legendY);
-  ctx.stroke();
-  
-  ctx.fillStyle = '#4a5568';
-  ctx.font = '11px Arial';
-  ctx.textAlign = 'left';
-  ctx.fillText('Réalisé', padding + 35, legendY + 4);
-  
-  // Prévision
-  ctx.strokeStyle = '#9f7aea';
-  ctx.lineWidth = 3;
-  ctx.setLineDash([8, 4]);
-  ctx.beginPath();
-  ctx.moveTo(padding + 90, legendY);
-  ctx.lineTo(padding + 110, legendY);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  
-  ctx.fillStyle = '#4a5568';
-  ctx.fillText('Prévision', padding + 115, legendY + 4);
-  
-  // Objectif
-  ctx.strokeStyle = '#38a169';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([5, 5]);
-  ctx.beginPath();
-  ctx.moveTo(padding + 180, legendY);
-  ctx.lineTo(padding + 200, legendY);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  
-  ctx.fillStyle = '#4a5568';
-  ctx.fillText('Objectif', padding + 205, legendY + 4);
-  
-  // Mise à jour des labels
-  document.getElementById('ca-actuel-chart').textContent = `${(caActuel / 1000).toFixed(0)}k€`;
-  document.getElementById('ca-prevision-chart').textContent = `${(previsionCA / 1000).toFixed(0)}k€`;
-  document.getElementById('ca-objectif-chart').textContent = `${(objectifCA / 1000).toFixed(0)}k€`;
+  const c1 = document.getElementById('ca-actuel-chart'); if (c1) c1.textContent = `${(caActuel / 1000).toFixed(0)}k€`;
+  const c2 = document.getElementById('ca-prevision-chart'); if (c2) c2.textContent = `${(previsionCA / 1000).toFixed(0)}k€`;
+  const c3 = document.getElementById('ca-objectif-chart'); if (c3) c3.textContent = `${(objectifCA / 1000).toFixed(0)}k€`;
 }
 
 function updateMargesChart(vendeurStats) {
   const container = document.getElementById('marges-chart');
   if (!container) return;
-  
   container.innerHTML = '';
   const maxMarge = Math.max(...vendeurStats.map(v => v.margeGeneree), 1);
-  
   vendeurStats.forEach(vendeur => {
     const height = Math.max(20, (vendeur.margeGeneree / maxMarge) * 150);
     const barContainer = document.createElement('div');
-    barContainer.style.cssText = `
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    `;
-    
+    barContainer.style.cssText = `flex:1; display:flex; flex-direction:column; align-items:center; gap:8px;`;
     const bar = document.createElement('div');
-    bar.style.cssText = `
-      width: 100%;
-      max-width: 40px;
-      height: ${height}px;
-      background: linear-gradient(to top, #ed8936, #f6ad55);
-      border-radius: 4px 4px 0 0;
-      position: relative;
-      transition: all 0.3s;
-      cursor: pointer;
-    `;
-    
+    bar.style.cssText = `width:100%; max-width:40px; height:${height}px; background:linear-gradient(to top,#ed8936,#f6ad55); border-radius:4px 4px 0 0; position:relative; transition:all .3s; cursor:pointer;`;
     const value = document.createElement('div');
-    value.style.cssText = `
-      position: absolute;
-      top: -20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 10px;
-      font-weight: bold;
-      color: #4a5568;
-      white-space: nowrap;
-    `;
+    value.style.cssText = `position:absolute; top:-20px; left:50%; transform:translateX(-50%); font-size:10px; font-weight:bold; color:#4a5568; white-space:nowrap;`;
     value.textContent = `${(vendeur.margeGeneree / 1000).toFixed(0)}k€`;
-    
     const label = document.createElement('div');
-    label.style.cssText = `
-      font-size: 11px;
-      color: #4a5568;
-      text-align: center;
-      font-weight: 500;
-    `;
+    label.style.cssText = `font-size:11px; color:#4a5568; text-align:center; font-weight:500;`;
     label.textContent = vendeur.nom;
-    
-    bar.appendChild(value);
-    barContainer.appendChild(bar);
-    barContainer.appendChild(label);
-    container.appendChild(barContainer);
+    bar.appendChild(value); barContainer.appendChild(bar); barContainer.appendChild(label); container.appendChild(barContainer);
   });
 }
 
 function updateInsights(vendeurStats, tauxGlobal, progressionCA, previsionCA, objectifCA) {
-  // Insight Performance
   let performanceText = '';
-  if (tauxGlobal >= 25) {
-    performanceText = `Excellente performance équipe avec ${tauxGlobal.toFixed(1)}% de conversion`;
-  } else if (tauxGlobal >= 20) {
-    performanceText = `Performance correcte à ${tauxGlobal.toFixed(1)}%, amélioration possible`;
-  } else {
-    performanceText = `Performance en dessous de l'objectif (${tauxGlobal.toFixed(1)}%), action requise`;
-  }
+  if (tauxGlobal >= OBJECTIF_TAUX) performanceText = `Excellente performance équipe avec ${tauxGlobal.toFixed(1)}% de conversion`;
+  else if (tauxGlobal >= OBJECTIF_TAUX - 5) performanceText = `Performance correcte à ${tauxGlobal.toFixed(1)}%, amélioration possible`;
+  else performanceText = `Performance en dessous de l'objectif (${tauxGlobal.toFixed(1)}%), action requise`;
   
-  // Insight Recommandation
   let recommandationText = '';
   const vendeursEnDifficulte = vendeurStats.filter(v => v.taux < 20).length;
-  if (vendeursEnDifficulte > 0) {
-    recommandationText = `${vendeursEnDifficulte} vendeur(s) ont besoin de coaching en closing`;
-  } else if (progressionCA < 75) {
-    recommandationText = 'Intensifier la prospection pour atteindre les objectifs';
-  } else {
-    recommandationText = 'Maintenir le rythme, objectifs en bonne voie';
-  }
+  if (vendeursEnDifficulte > 0) recommandationText = `${vendeursEnDifficulte} vendeur(s) ont besoin de coaching en closing`;
+  else if (progressionCA < 75) recommandationText = 'Intensifier la prospection pour atteindre les objectifs';
+  else recommandationText = 'Maintenir le rythme, objectifs en bonne voie';
   
-  // Insight Action
   let actionText = '';
   if (previsionCA < objectifCA) {
     const manque = objectifCA - previsionCA;
     actionText = `Accélérer les ventes : ${(manque/1000).toFixed(0)}k€ manquants`;
-  } else {
-    actionText = 'Objectif en voie d\'être dépassé, excellente trajectoire !';
-  }
+  } else actionText = 'Objectif en voie d\'être dépassé, excellente trajectoire !';
   
-  document.getElementById('insight-performance').textContent = performanceText;
-  document.getElementById('insight-recommandation').textContent = recommandationText;
-  document.getElementById('insight-action').textContent = actionText;
+  const ip = document.getElementById('insight-performance'); if (ip) ip.textContent = performanceText;
+  const ir = document.getElementById('insight-recommandation'); if (ir) ir.textContent = recommandationText;
+  const ia = document.getElementById('insight-action'); if (ia) ia.textContent = actionText;
 }
 
 function updateChart() {
   const chart = document.getElementById('chart-vendeurs');
   if (!chart) return;
-  
   const d = getDonneesActuelles();
   const vendeurs = Object.keys(d);
   let html = '';
   const maxCA = Math.max(...vendeurs.map(v => d[v].ca || 0), 1);
-  
   vendeurs.forEach(v => {
     const x = d[v];
     const height = Math.max(30, ((x.ca || 0) / maxCA) * 160);
@@ -1279,25 +1069,19 @@ function updateChart() {
       </div>
     `;
   });
-  
   chart.innerHTML = html;
 }
 
 function updateAlertes() {
   const container = document.getElementById('alertes-marges');
   if (!container) return;
-  
   const d = getDonneesActuelles();
   let alertes = [];
-  
   for(const v in d) {
     const x = d[v];
     const prog = x.objectif > 0 ? ((x.ca || 0) / x.objectif * 100) : 0;
-    if(prog < 50) {
-      alertes.push(`${v} : ${prog.toFixed(1)}% de son objectif`);
-    }
+    if(prog < 50) alertes.push(`${v} : ${prog.toFixed(1)}% de son objectif`);
   }
-  
   container.innerHTML = alertes.length === 0 ? 
     `<div class="alert alert-success"><strong>✅ Excellent !</strong> Tous les vendeurs progressent bien.</div>` : 
     `<div class="alert alert-warning"><strong>⚠️ ${alertes.length} vendeur(s) en retard :</strong><br>${alertes.join('<br>')}</div>`;
@@ -1305,26 +1089,32 @@ function updateAlertes() {
 
 function updateVendeurs() {
   console.log('👥 Mise à jour vendeurs');
-  const grid = document.getElementById('vendeurs-grid');
-  if (!grid) return;
-  
+  const grid = document.getElementById('vendeurs-grid'); if (!grid) return;
   const d = getDonneesActuelles();
   grid.innerHTML = '';
-  
-  for(const v in d) {
+  for (const v in d) {
     const x = d[v];
     const taux = (x.prospects || 0) > 0 ? ((x.ventes || 0) / x.prospects * 100) : 0;
     const prog = (x.objectif || 0) > 0 ? ((x.ca || 0) / x.objectif * 100) : 0;
-    
+    const conforme = isConformeMarge(x);
+    const chipCls = conforme ? 'ok' : 'ko';
+    const chipLabel = conforme ? `Conforme marge (≥ ${MARGE_MIN}€)` : `Sous marge (< ${MARGE_MIN}€)`;
+    const besoinConv = taux < OBJECTIF_TAUX && (x.prospects || 0) >= 4;
+    const needConvChip = besoinConv ? `<span class="chip warn">🎯 Booster conv. (${taux.toFixed(1)}%)</span>` : '';
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
       <h3>👤 ${v}</h3>
+      <div style="margin:6px 0 10px 0;">
+        <span class="chip ${chipCls}">💶 ${chipLabel}</span>
+        ${needConvChip}
+      </div>
       <div class="metric"><span>Prospects</span><span class="metric-value neutral">${x.prospects || 0}</span></div>
       <div class="metric"><span>Ventes</span><span class="metric-value positive">${x.ventes || 0}</span></div>
       <div class="metric"><span>CA</span><span class="metric-value positive">${(x.ca || 0).toLocaleString()} €</span></div>
-      <div class="metric"><span>Taux conversion</span><span class="metric-value ${taux >= 25 ? 'positive' : 'neutral'}">${taux.toFixed(1)}%</span></div>
+      <div class="metric"><span>Taux conversion</span><span class="metric-value ${taux >= OBJECTIF_TAUX ? 'positive' : 'neutral'}">${taux.toFixed(1)}%</span></div>
       <div class="metric"><span>Progression</span><span class="metric-value ${prog >= 100 ? 'positive' : 'neutral'}">${prog.toFixed(1)}%</span></div>
+      <div class="metric"><span>Marge moyenne</span><span class="metric-value ${conforme ? 'positive':'negative'}">${(x.margeValeur||0).toLocaleString()} €</span></div>
       <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100, prog)}%"></div></div>
     `;
     grid.appendChild(card);
@@ -1335,49 +1125,30 @@ function updateVueAnnuelle() {
   console.log('🗓️ Mise à jour vue annuelle');
   let caAnnuel = 0;
   let ventesAnnuelles = 0;
-  
   for(let mois = 0; mois < 12; mois++) {
     const key = `${anneeActuelle}-${mois}`;
     const donneesMois = donneesParMois[key] || {};
-    
     for(const vendeur in donneesMois) {
       const data = donneesMois[vendeur];
       caAnnuel += data.ca || 0;
       ventesAnnuelles += data.ventes || 0;
     }
   }
-  
-  const elements = {
-    'ca-annuel': caAnnuel.toLocaleString() + ' €',
-    'ventes-annuelles': ventesAnnuelles
-  };
-  
-  for(const [id, value] of Object.entries(elements)) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = value;
-  }
+  const elements = { 'ca-annuel': caAnnuel.toLocaleString() + ' €', 'ventes-annuelles': ventesAnnuelles };
+  for(const [id, value] of Object.entries(elements)) { const el = document.getElementById(id); if (el) el.textContent = value; }
 }
 
-function updateComparatif() {
-  console.log('📊 Mise à jour comparatif');
-  updateEvolution();
-  updatePerformance();
-}
-
+function updateComparatif() { console.log('📊 Mise à jour comparatif'); updateEvolution(); updatePerformance(); }
 function updateEvolution() {
   const container = document.getElementById('evolution-content');
   if (!container) return;
-  
   container.innerHTML = '<div class="metric"><span>Évolution CA</span><span class="positive">En cours de calcul...</span></div>';
 }
-
 function updatePerformance() {
   const container = document.getElementById('performance-content');
   if (!container) return;
-  
   const d = getDonneesActuelles();
   let html = '';
-  
   for(const v in d) {
     const x = d[v];
     const prog = (x.objectif || 0) > 0 ? ((x.ca || 0) / x.objectif * 100) : 0;
@@ -1385,38 +1156,20 @@ function updatePerformance() {
     const icon = prog >= 100 ? '🎯' : prog >= 75 ? '📈' : '⚠️';
     html += `<div class="metric"><span>${icon} ${v}</span><span class="metric-value ${status}">${prog.toFixed(1)}%</span></div>`;
   }
-  
   container.innerHTML = html;
 }
 
 function updateIATab() {
   console.log('🤖 Mise à jour IA');
   const d = getDonneesActuelles();
-  
-  let totalCA = 0;
-  let totalVentes = 0;
-  
-  for(const v in d) {
-    totalCA += d[v].ca || 0;
-    totalVentes += d[v].ventes || 0;
-  }
-  
+  let totalCA = 0, totalVentes = 0;
+  for(const v in d) { totalCA += d[v].ca || 0; totalVentes += d[v].ventes || 0; }
   const jourActuel = new Date().getDate();
   const joursDansMois = new Date(anneeActuelle, moisActuel + 1, 0).getDate();
-  const previsionCA = Math.round(totalCA * (joursDansMois / jourActuel));
-  const previsionVentes = Math.round(totalVentes * (joursDansMois / jourActuel));
-  
-  const elements = {
-    'ia-prev-ca': previsionCA.toLocaleString() + ' €',
-    'ia-prev-ventes': previsionVentes,
-    'ia-prev-taux': '25.0%'
-  };
-  
-  for(const [id, value] of Object.entries(elements)) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = value;
-  }
-  
+  const previsionCA = Math.round(totalCA * (joursDansMois / Math.max(jourActuel,1)));
+  const previsionVentes = Math.round(totalVentes * (joursDansMois / Math.max(jourActuel,1)));
+  const elements = { 'ia-prev-ca': previsionCA.toLocaleString() + ' €', 'ia-prev-ventes': previsionVentes, 'ia-prev-taux': '25.0%' };
+  for(const [id, value] of Object.entries(elements)) { const el = document.getElementById(id); if (el) el.textContent = value; }
   const suggestions = document.getElementById('ia-suggestions');
   if (suggestions) {
     suggestions.innerHTML = `
@@ -1434,15 +1187,12 @@ function updateSaisieFields() {
   console.log('✏️ Mise à jour champs saisie');
   const sel = document.getElementById('vendeur-select');
   if (!sel) return;
-  
   const v = sel.value;
   const d = getDonneesActuelles();
   const marge = d[v]?.margeValeur ?? 2500;
   const objectif = d[v]?.objectif ?? 80000;
-  
   const margeInput = document.getElementById('marge-input');
   const objectifInput = document.getElementById('objectif-input');
-  
   if (margeInput) margeInput.value = marge;
   if (objectifInput) objectifInput.value = objectif;
 }
@@ -1450,67 +1200,53 @@ function updateSaisieFields() {
 // === ACTIONS UTILISATEUR ===
 function sauvegarderDonnees() {
   console.log('💾 Sauvegarde données');
-  
+
   const v = document.getElementById('vendeur-select')?.value;
   const prospects = parseInt(document.getElementById('prospects-input')?.value) || 0;
   const ventes = parseInt(document.getElementById('ventes-input')?.value) || 0;
   const ca = parseInt(document.getElementById('ca-input')?.value) || 0;
-  const margeInput = document.getElementById('marge-input')?.value;
-  const objectifInput = document.getElementById('objectif-input')?.value;
-  
-  if (!v) {
-    showNotification('Erreur: Sélectionnez un vendeur', 'warning');
-    return;
-  }
-  
-  if (prospects === 0 && ventes === 0 && ca === 0) {
-    showNotification('Veuillez saisir au moins une valeur', 'warning');
-    return;
-  }
-  
-  if (ventes > prospects && prospects > 0) {
-    showNotification('Erreur: Les ventes ne peuvent pas dépasser les prospects', 'warning');
-    return;
-  }
-  
+  const margeInputVal = document.getElementById('marge-input')?.value;
+  const objectifInputVal = document.getElementById('objectif-input')?.value;
+
+  if (!v) { showNotification('Erreur: Sélectionnez un vendeur', 'warning'); return; }
+  if (prospects === 0 && ventes === 0 && ca === 0) { showNotification('Veuillez saisir au moins une valeur', 'warning'); return; }
+  if (ventes > prospects && prospects > 0) { showNotification('Erreur: Les ventes ne peuvent pas dépasser les prospects', 'warning'); return; }
+
   const d = getDonneesActuelles();
+
+  // alerte marge basse (non bloquante)
+  if (margeInputVal !== '' && Number(margeInputVal) < MARGE_MIN) {
+    showNotification(`⚠️ Marge < ${MARGE_MIN.toLocaleString()}€ pour ${v} — coaching recommandé`, 'warning');
+  }
+
   d[v].prospects += prospects;
   d[v].ventes += ventes;
   d[v].ca += ca;
-  
-  if (margeInput !== '') d[v].margeValeur = Math.max(0, parseFloat(margeInput));
-  if (objectifInput !== '') d[v].objectif = Math.max(0, parseFloat(objectifInput));
-  
-  // Reset inputs
-  ['prospects-input', 'ventes-input', 'ca-input'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  
+
+  if (margeInputVal !== '') d[v].margeValeur = Math.max(0, parseFloat(margeInputVal));
+  if (objectifInputVal !== '') d[v].objectif = Math.max(0, parseFloat(objectifInputVal));
+
+  ['prospects-input', 'ventes-input', 'ca-input'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
+
+  // nudge conversion si sous 25%
+  const taux = d[v].prospects > 0 ? (d[v].ventes / d[v].prospects * 100) : 0;
+  if (taux < OBJECTIF_TAUX && d[v].prospects >= 4) {
+    showNotification(`🎯 ${v}: taux ${taux.toFixed(1)}% < ${OBJECTIF_TAUX}% — plan d’actions à prévoir`, 'warning');
+  }
+
   showNotification(`Données sauvegardées pour ${v}`);
   updateActiveTab();
 }
 
 function exporterDonnees() {
   console.log('📥 Export données');
-  const dataToExport = { 
-    donneesParMois, 
-    moisActuel, 
-    anneeActuelle, 
-    dateExport: new Date().toISOString(), 
-    version: '2.5-corrige' 
-  };
-  
+  const dataToExport = { donneesParMois, moisActuel, anneeActuelle, dateExport: new Date().toISOString(), version: '2.5-corrige' };
   const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = `dashboard-commercial-${anneeActuelle}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  a.href = url; a.download = `dashboard-commercial-${anneeActuelle}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  
   showNotification('📥 Données exportées avec succès');
 }
 
@@ -1535,28 +1271,15 @@ function reinitialiserTout() {
 // === ÉVÉNEMENTS ===
 function setupEventListeners() {
   console.log('🔧 Configuration des événements');
-  
-  // Navigation mois
   const prevBtn = document.getElementById('prev-month');
   const nextBtn = document.getElementById('next-month');
   if (prevBtn) prevBtn.addEventListener('click', () => changerMois(-1));
   if (nextBtn) nextBtn.addEventListener('click', () => changerMois(1));
-  
-  // Onglets
   document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', (e) => {
-      const tabName = e.target.getAttribute('data-tab');
-      if (tabName) showTab(tabName);
-    });
+    tab.addEventListener('click', (e) => { const tabName = e.target.getAttribute('data-tab'); if (tabName) showTab(tabName); });
   });
-  
-  // Saisie vendeur
   const vendeurSelect = document.getElementById('vendeur-select');
-  if (vendeurSelect) {
-    vendeurSelect.addEventListener('change', updateSaisieFields);
-  }
-  
-  // Boutons d'action
+  if (vendeurSelect) vendeurSelect.addEventListener('change', updateSaisieFields);
   const buttons = {
     'save-btn': sauvegarderDonnees,
     'export-btn': exporterDonnees,
@@ -1565,15 +1288,10 @@ function setupEventListeners() {
     'refresh-war-room': updateWarRoom,
     'generate-ia-btn': () => updateIATab()
   };
-  
   for(const [id, handler] of Object.entries(buttons)) {
     const btn = document.getElementById(id);
-    if (btn) {
-      btn.addEventListener('click', handler);
-      console.log(`✅ Bouton ${id} configuré`);
-    } else {
-      console.warn(`⚠️ Bouton ${id} non trouvé`);
-    }
+    if (btn) { btn.addEventListener('click', handler); console.log(`✅ Bouton ${id} configuré`); }
+    else { console.warn(`⚠️ Bouton ${id} non trouvé`); }
   }
 }
 
@@ -1581,16 +1299,13 @@ function setupEventListeners() {
 function demarrerWarRoomAutoRefresh() {
   setInterval(() => {
     const warRoomTab = document.getElementById('warroom');
-    if (warRoomTab && warRoomTab.classList.contains('active')) {
-      updateWarRoom();
-    }
-  }, 15000); // 15 secondes
+    if (warRoomTab && warRoomTab.classList.contains('active')) updateWarRoom();
+  }, 15000);
 }
 
 // === INITIALISATION ===
 function init() {
   console.log('🚀 Initialisation Dashboard v2.5 Corrigé');
-  
   try {
     initialiserDonnees();
     updateMoisAffichage();
@@ -1598,10 +1313,8 @@ function init() {
     updateVueEnsemble();
     updateSaisieFields();
     demarrerWarRoomAutoRefresh();
-    
     showNotification('🚀 Dashboard v2.5 Corrigé chargé avec succès !');
     console.log('✅ Initialisation terminée');
-    
   } catch (error) {
     console.error('❌ Erreur initialisation:', error);
     showNotification('❌ Erreur lors du chargement', 'warning');
@@ -1609,13 +1322,9 @@ function init() {
 }
 
 // === DÉMARRAGE ===
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
+if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
 
-// Gestion des erreurs globales
+// Erreurs globales
 window.addEventListener('error', function(e) {
   console.error('❌ Erreur globale:', e.error);
   showNotification('⚠️ Une erreur est survenue', 'warning');
