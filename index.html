@@ -282,9 +282,9 @@
           </div>
         </div>
       </div>
-    </div></div>
+    </div>
 
-    <!-- Section enrichie -->
+    <!-- Section enrichie (UNIQUEMENT dans Vue d'ensemble) -->
     <div class="advanced-grid">
       <!-- Top vendeur enrichi -->
       <div class="top-seller">
@@ -1231,7 +1231,7 @@ function sauvegarderDonnees() {
   // nudge conversion si sous 25%
   const taux = d[v].prospects > 0 ? (d[v].ventes / d[v].prospects * 100) : 0;
   if (taux < OBJECTIF_TAUX && d[v].prospects >= 4) {
-    showNotification(`🎯 ${v}: taux ${taux.toFixed(1)}% < ${OBJECTIF_TAUX}% — plan d’actions à prévoir`, 'warning');
+    showNotification(`🎯 ${v}: taux ${taux.toFixed(1)}% < ${OBJECTIF_TAUX}% — plan d'actions à prévoir`, 'warning');
   }
 
   showNotification(`Données sauvegardées pour ${v}`);
