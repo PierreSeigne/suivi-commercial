@@ -15,10 +15,29 @@ function pickKey(req) {
   return `suivi-commercial-${d}.json`;
 }
 
+function getDefaultData() {
+  return {
+    donneesParMois: {},
+    moisActuel: new Date().getMonth(),
+    anneeActuelle: new Date().getFullYear(),
+    version: 'blob-1',
+    lastUpdate: new Date().toISOString()
+  };
+}
+
 export default async function handler(req, res) {
   try {
     const key = pickKey(req);
     console.log('Processing request:', req.method, 'for key:', key);
+
+    // Ajouter les headers CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
 
     if (req.method === 'GET') {
       try {
@@ -27,11 +46,7 @@ export default async function handler(req, res) {
         
         if (blobs.length === 0) {
           console.log('No blob found, returning default data');
-          return res.status(200).json({ 
-            donneesParMois: {}, 
-            version: 'blob-1',
-            key: key
-          });
+          return res.status(200).json(getDefaultData());
         }
 
         // Prendre le premier blob trouvé
@@ -44,14 +59,18 @@ export default async function handler(req, res) {
         }
         
         const data = await response.json();
+        
+        // Validation et nettoyage des données
+        if (!data.donneesParMois) {
+          data.donneesParMois = {};
+        }
+        
         return res.status(200).json(data);
 
       } catch (fetchError) {
         console.error('Error fetching blob:', fetchError);
-        return res.status(200).json({ 
-          donneesParMois: {}, 
-          version: 'blob-1',
-          key: key,
+        return res.status(200).json({
+          ...getDefaultData(),
           error: fetchError.message
         });
       }
@@ -59,12 +78,26 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       try {
-        // Next.js parse automatiquement le JSON
-        const bodyData = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+        const bodyData = req.body;
+        
+        // Validation des données reçues
+        if (!bodyData || typeof bodyData !== 'object') {
+          return res.status(400).json({ 
+            ok: false, 
+            error: 'Données invalides'
+          });
+        }
+
+        // Enrichir les données avec des métadonnées
+        const dataToSave = {
+          ...bodyData,
+          lastUpdate: new Date().toISOString(),
+          version: 'blob-1'
+        };
         
         console.log('Saving data to blob:', key);
         
-        const blob = await put(key, bodyData, {
+        const blob = await put(key, JSON.stringify(dataToSave, null, 2), {
           access: 'public',
           contentType: 'application/json',
           addRandomSuffix: false
@@ -75,7 +108,8 @@ export default async function handler(req, res) {
         return res.status(200).json({ 
           ok: true, 
           url: blob.url,
-          key: key
+          key: key,
+          timestamp: dataToSave.lastUpdate
         });
 
       } catch (saveError) {
@@ -88,8 +122,11 @@ export default async function handler(req, res) {
       }
     }
 
-    res.setHeader('Allow', ['GET', 'POST']);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    res.setHeader('Allow', ['GET', 'POST', 'OPTIONS']);
+    return res.status(405).json({ 
+      ok: false, 
+      error: `Method ${req.method} Not Allowed` 
+    });
 
   } catch (err) {
     console.error('API Error:', err);
