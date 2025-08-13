@@ -1,23 +1,9 @@
 import { put, list } from '@vercel/blob';
 
-function pickKey(req) {
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const d = url.searchParams.get('d') || 'default';
-  return `suivi-commercial-${d}.json`;
-}
-
-function getDefaultData() {
-  return {
-    donneesParMois: {},
-    moisActuel: new Date().getMonth(),
-    anneeActuelle: new Date().getFullYear(),
-    version: 'blob-1',
-    lastUpdate: new Date().toISOString()
-  };
-}
-
 export default async function handler(req, res) {
-  // Headers CORS pour éviter les erreurs de sécurité
+  console.log('🔧 API Request:', req.method);
+  
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -26,111 +12,62 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  try {
-    const key = pickKey(req);
-    console.log('Processing request:', req.method, 'for key:', key);
+  const key = 'dashboard-commercial-data.json';
 
-    if (req.method === 'GET') {
-      try {
-        // Lister tous les blobs pour trouver le bon
-        const { blobs } = await list({ prefix: key });
-        
-        if (blobs.length === 0) {
-          console.log('No blob found, returning default data');
-          return res.status(200).json(getDefaultData());
-        }
-
-        // Prendre le premier blob trouvé
-        const blob = blobs[0];
-        console.log('Found blob:', blob.pathname);
-        
-        const response = await fetch(blob.url);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch blob: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        // Validation et nettoyage des données
-        if (!data.donneesParMois) {
-          data.donneesParMois = {};
-        }
-        
-        return res.status(200).json(data);
-
-      } catch (fetchError) {
-        console.error('Error fetching blob:', fetchError);
+  if (req.method === 'GET') {
+    try {
+      console.log('📖 Lecture des données...');
+      const { blobs } = await list({ prefix: key });
+      
+      if (blobs.length === 0) {
+        console.log('📝 Aucune donnée - retour données par défaut');
         return res.status(200).json({
-          ...getDefaultData(),
-          error: fetchError.message
+          donneesParMois: {},
+          moisActuel: new Date().getMonth(),
+          anneeActuelle: new Date().getFullYear(),
+          version: 'emergency-1.0'
         });
       }
+
+      const response = await fetch(blobs[0].url);
+      const data = await response.json();
+      console.log('✅ Données chargées avec succès');
+      return res.status(200).json(data);
+      
+    } catch (error) {
+      console.error('❌ Erreur lecture:', error);
+      return res.status(200).json({
+        donneesParMois: {},
+        moisActuel: new Date().getMonth(),
+        anneeActuelle: new Date().getFullYear(),
+        error: error.message
+      });
     }
-
-    if (req.method === 'POST') {
-      try {
-        let bodyData = req.body;
-        
-        // Si le body est une string, la parser
-        if (typeof bodyData === 'string') {
-          bodyData = JSON.parse(bodyData);
-        }
-        
-        // Validation des données reçues
-        if (!bodyData || typeof bodyData !== 'object') {
-          return res.status(400).json({ 
-            ok: false, 
-            error: 'Données invalides'
-          });
-        }
-
-        // Enrichir les données avec des métadonnées
-        const dataToSave = {
-          ...bodyData,
-          lastUpdate: new Date().toISOString(),
-          version: 'blob-1'
-        };
-        
-        console.log('Saving data to blob:', key);
-        
-        const blob = await put(key, JSON.stringify(dataToSave, null, 2), {
-          access: 'public',
-          contentType: 'application/json',
-          addRandomSuffix: false
-        });
-
-        console.log('Blob saved successfully:', blob.url);
-        
-        return res.status(200).json({ 
-          ok: true, 
-          url: blob.url,
-          key: key,
-          timestamp: dataToSave.lastUpdate
-        });
-
-      } catch (saveError) {
-        console.error('Error saving blob:', saveError);
-        return res.status(500).json({ 
-          ok: false, 
-          error: saveError.message,
-          key: key
-        });
-      }
-    }
-
-    // Méthode non autorisée
-    res.setHeader('Allow', ['GET', 'POST', 'OPTIONS']);
-    return res.status(405).json({ 
-      ok: false, 
-      error: `Method ${req.method} Not Allowed` 
-    });
-
-  } catch (err) {
-    console.error('API Error:', err);
-    return res.status(500).json({ 
-      ok: false, 
-      error: err.message,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
   }
+
+  if (req.method === 'POST') {
+    try {
+      console.log('💾 Sauvegarde des données...');
+      
+      const dataToSave = {
+        ...req.body,
+        lastUpdate: new Date().toISOString(),
+        version: 'emergency-1.0'
+      };
+      
+      const blob = await put(key, JSON.stringify(dataToSave), {
+        access: 'public',
+        contentType: 'application/json'
+      });
+
+      console.log('✅ Données sauvegardées:', blob.url);
+      return res.status(200).json({ ok: true, url: blob.url });
+      
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde:', error);
+      return res.status(500).json({ ok: false, error: error.message });
+    }
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' });
 }
